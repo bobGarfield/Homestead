@@ -1,0 +1,86 @@
+html, body
+{
+	height : 100%;
+	width  : 100%;
+	
+	margin  : 0;
+	padding : 0;
+}
+
+body
+{
+	background : #000;
+}
+
+header
+{
+	position : absolute;
+
+	top : 0;
+
+	width  : 100%;
+	height : 50px;
+
+	background : url(../ress/graphics/header.png) repeat-x;
+}
+
+footer
+{
+	position : absolute;
+
+	bottom : 0;
+
+	width  : 100%;
+	height : 50px;
+
+	background : url(../ress/graphics/footer.png) repeat-x;
+}
+
+section.general
+{
+	position : absolute;
+
+	top    : 50px;
+	bottom : 50px;
+
+	width  : 100%;
+	height : auto;
+}
+
+div.frame
+{
+	position : absolute;
+
+	top  : 50%;
+	left : 50%;
+
+	width  : 770px;
+	height : 420px;
+
+	margin : -210px -385px;
+}
+
+div.section_header
+{
+	position : absolute;
+	z-index : 1;
+
+	top : 0;
+
+	width  : 100% ;
+	height : 100px;
+
+	background : url(../ress/graphics/section_header.png) top center repeat-x;
+}
+
+div.section_footer
+{
+	position : absolute;
+
+	bottom : 0;
+
+	width  : 100% ;
+	height : 100px;
+
+	background : url(../ress/graphics/section_footer.png) bottom center repeat-x;
+}

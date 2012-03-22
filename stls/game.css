@@ -1,0 +1,21 @@
+section#game
+{
+	background : #000;
+
+	display : none;
+}
+
+section#game canvas#window
+{
+	width  : 750px;
+	height : 400px;
+
+	position : absolute;
+
+	top  : 50%;
+	left : 50%;
+
+	margin : -200px -375px;
+
+	background : #050505;
+}

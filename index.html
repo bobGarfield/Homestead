@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<head>
+
+	<title>Montage</title>
+	<meta charset = "utf-8"></meta>
+
+	<!-- Style           -->
+	<link  href = "stls/fonts.css"    rel = "stylesheet"/>
+	<link  href = "stls/basic.css"    rel = "stylesheet"/>
+	<link  href = "stls/menu.css"     rel = "stylesheet"/>
+	<link  href = "stls/game.css"     rel = "stylesheet"/>
+	<link  href = "stls/journal.css"  rel = "stylesheet"/>
+
+	<!-- Paper.js        -->
+	<script src = "libs/paper.js/paper.js"     ></script>
+
+	<!-- Utils           -->
+	<script src = "comp/utils.js"              ></script>
+	
+	<!-- Interface       -->
+	<script src = "comp/Interface.js"          ></script>	
+
+	<!-- Resources       -->
+	<script src = "comp/Resources.js"          ></script>
+	
+	<!-- Map             -->
+	<script src = "comp/Map.js"                ></script>
+
+	<!-- Items           -->
+	<script src = "comp/Items/Container.js"    ></script>	
+
+	<!-- Player          -->
+	<script src = "comp/Player/Inventory.js"   ></script>
+	<script src = "comp/Player/Hero.js"        ></script>
+
+	<!-- General Manager -->
+	<script src = "comp/Manager.js"            ></script>
+
+	<!-- Controller      -->
+	<script src = "comp/App.js"               ></script>
+
+	<!-- Map Matrix      -->
+	<script src = "maps/basic.js"              ></script>
+</head>
+
+<body>
+	<header>
+	</header>
+
+	<section id = "menu" class = "general">
+		<div class = "section_header">
+		</div>
+		<div id = "menu_background">
+			<div class = "frame">
+				<ul id = "menu_list" type = "none">
+					<li id = "start_game">Start Game</li>
+					<li id = "options"   >Options</li>
+				</ul>
+			</div>
+		</div>
+		<div class = "section_footer">
+		</div>
+	</section>
+
+	<section id = "game" class = "general">
+		<div class = "section_header">
+		</div>
+		<div class = "frame">
+			<canvas id = "window" width = "720" height = "400"></canvas>
+		</div>
+		<div class = "section_footer">
+		</div>
+	</section>
+
+	<section id = "journal" class = "general">
+		<div class = "section_header">
+		</div>
+		<div class = "frame">
+			<div id = "inventory">
+				<table id = "list">
+				</table>
+			</div>
+			<div id = "skills">
+			</div>
+		</div>
+		<div class = "section_footer">
+		</div>
+	</section>
+
+	<footer>
+	</footer>
+</body>
+
+<script>	
+	window.onload = function()
+	{
+		var canvas = $('#window');
+
+		var resources = new Resources({
+			textures : {
+				land0   : 'ress/textures/land0.png',
+				land1   : 'ress/textures/land1.png',
+				land2   : 'ress/textures/land2.png',
+				land3   : 'ress/textures/land3.png',
+
+				player        : 'ress/textures/player_right.png',
+				playerLeft    : 'ress/textures/player_left.png',
+				playerRun     : 'ress/textures/player_run_right.png',
+				playerRunLeft : 'ress/textures/player_run_left.png'
+			}
+		});
+
+		var 
+			interface = new Interface,
+			app       = new App;
+
+		interface.init(app, {
+			game      : '#game'     ,
+			menu      : '#menu'     ,
+			options   : '#options'  ,
+			journal   : '#journal'  ,
+			list      : '#list',
+
+			bShowOptions : '#show_options',
+			bStartGame   : '#start_game'
+		});
+
+		app.init({
+			matrix    : matrix   ,
+			paper     : paper    ,
+			canvas    : canvas   ,
+			resources : resources,
+			interface : interface
+		});
+	}
+</script>

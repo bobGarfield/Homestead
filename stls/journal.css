@@ -1,0 +1,23 @@
+section#journal
+{
+	background : #000;
+
+	display : none;
+}
+
+section#journal .frame
+{
+	border-radius : 20px;
+	
+	background : url(../ress/graphics/journal_background.png);
+}
+
+section#journal div#inventory
+{
+	position : absolute;
+
+	width  : 60%;
+	height : 100%;
+
+	border-radius : 20px;
+}
