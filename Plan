@@ -2,11 +2,12 @@
 |            Short Description
 |
 +--------------+---------------------------+
-| # Name       | Age Of Decay              
+| # Name       | Homestead              
 +--------------+---------------------------+
 | # Goal       | 2D Platformer, with RPG   
 |              | system, craft. Can be     
-|              | played in several modes   
+|              | played in several modes,
+|              | Multiplatform
 +--------------+---------------------------+
 | # Developer  | Bob Garfield              
 +--------------+---------------------------+
@@ -27,11 +28,12 @@
 | # 0.5
 | + Menu
 | + Build System
-| - Inventory System
+| + Inventory System
+| - Locations System
+|
+| # 0.9
 | - Perks System
 | - Skills System
-|
-| # 0.6
 | - Mobs (Enemy, Friendly, Neutral)
 | - Tools
 | - Map Selection
