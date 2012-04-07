@@ -1,0 +1,41 @@
+|
+|            Short Description
+|
++--------------+---------------------------+
+| # Name       | Homestead              
++--------------+---------------------------+
+| # Goal       | 2D Platformer, with RPG   
+|              | system, craft. Can be     
+|              | played in several modes,
+|              | Multiplatform
++--------------+---------------------------+
+| # Developer  | Bob Garfield              
++--------------+---------------------------+
+| # Designer   | Bob Garfield              
++--------------+---------------------------+
+| # Composer   | Bob Garfield              
++------------------------------------------+
+|
+|               Versions
+|
++------------------------------------------+
+| # 0.1 (Done)
+| + Map
+| + Player
+| + Textures
+| + Animation
+|
+| # 0.5
+| + Menu
+| + Build System
+| + Inventory System
+| - Locations System
+|
+| # 0.9
+| - Perks System
+| - Skills System
+| - Mobs (Enemy, Friendly, Neutral)
+| - Tools
+| - Map Selection
+| - Map Generator
++------------------------------------------+

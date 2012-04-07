@@ -1,4 +1,4 @@
-section#menu ul#menu_list
+#menuList
 {
 	display : block;
 
@@ -6,25 +6,23 @@ section#menu ul#menu_list
 
 	margin : 100px auto;
 
-	color       : white;
-
-	font-family : Miele;
 	font-size   : 25px;
 }
 
-section#menu ul#menu_list li
+#menuList li
 {
 	margin-bottom : 25px;
+	list-style-type : none;
 }
 
-section#menu ul#menu_list li:hover
+#menuList li:hover
 {
 	cursor : pointer;
 
 	color : lightgray;
 }
 
-section#menu div#menu_background
+#menuBackground
 {
 	position : absolute;
 

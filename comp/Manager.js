@@ -1,5 +1,5 @@
 (function() {
-  var all, down, left, leftButton, makeJumpKey, openJournalKey, right, rightButton, up, walkLeftKey, walkRightKey;
+  var all, down, left, leftButton, makeJumpKey, openJournalKey, right, rightButton, toLeft, toRight, up, walkLeftKey, walkRightKey;
 
   all = 4;
 
@@ -10,6 +10,10 @@
   up = 50;
 
   down = 5;
+
+  toLeft = [left, 0].point();
+
+  toRight = [right, 0].point();
 
   walkLeftKey = 'a';
 
@@ -34,7 +38,12 @@
     }
 
     Manager.prototype.start = function() {
-      this.drawMap();
+      var interface, player, storage, _ref;
+      _ref = this.opts, interface = _ref.interface, player = _ref.player, storage = _ref.storage;
+      this.location = storage.current;
+      interface.container = player.inventory.container;
+      this.view.resetCamera();
+      this.buildLocation();
       this.spawnPlayer();
       this.defineLoop();
       this.defineMouseHandlers();
@@ -42,14 +51,11 @@
     };
 
     Manager.prototype.defineKeyboardHandlers = function() {
-      var interface, player, textures, _ref,
+      var interface, journal, player, textures, _ref,
         _this = this;
       _ref = this.opts, interface = _ref.interface, player = _ref.player, textures = _ref.textures;
+      journal = interface.elements.journal;
       this.tool.onKeyDown = function(event) {
-        if (event.key === openJournalKey) {
-          interface.openJournal();
-          interface.drawContainer(player.inventory.container)();
-        }
         if (event.key === walkRightKey) player.shape.image = textures.playerRun;
         if (event.key === walkLeftKey) {
           return player.shape.image = textures.playerRunLeft;
@@ -64,98 +70,138 @@
     };
 
     Manager.prototype.defineMouseHandlers = function() {
-      var map, player, _ref,
+      var player,
         _this = this;
-      _ref = this.opts, player = _ref.player, map = _ref.map;
+      player = this.opts.player;
       return this.tool.onMouseDown = function(event) {
-        var block, button, coord, dist, inventory;
-        dist = _this.view.camera.x;
-        coord = event.point.clone();
-        coord.x += dist;
+        var button, camera, id, inventory, location, point, shape;
+        location = _this.location;
+        camera = _this.view.camera.x;
+        point = event.point.clone();
+        point.x += camera - location.cellSize / 4;
         button = event.event.button;
         inventory = player.inventory;
         switch (button) {
           case leftButton:
-            block = map.blockAt(coord);
-            inventory.put(block);
-            return map.destroyBlockAt(coord);
+            id = location.blockAt(point);
+            inventory.put(id);
+            return location.destroyBlockAt(point);
           case rightButton:
-            return map.putBlockTo(coord, inventory.current);
+            if (!location.blockAt(point)) {
+              id = inventory.takeBlock();
+              shape = _this.makeBlock(id);
+              return location.putBlockTo(point, id, shape);
+            }
         }
       };
     };
 
     Manager.prototype.defineLoop = function() {
-      var camera, key, map, player, _ref,
+      var key, player, storage, _ref,
         _this = this;
-      _ref = this.opts, map = _ref.map, player = _ref.player;
+      _ref = this.opts, player = _ref.player, storage = _ref.storage;
       key = this.Key;
-      camera = this.view.camera = [0, 0].point();
       return this.view.onFrame = function() {
-        var vector;
+        var camera, location, side;
+        location = _this.location;
+        camera = _this.view.camera;
         if (key.isDown(walkRightKey)) {
-          if (map.checkX(player.head, 0) && map.checkX(player.body, 0)) {
+          if (location.checkX(player.head, 0) && location.checkX(player.body, 0)) {
             player.move(right);
-            if ((camera.x + _this.view.size.width) / map.cellSize < map.width) {
-              vector = [left, 0].point();
-              _this.view.translate(vector);
+            if ((side = location.checkBorder(player.body))) {
+              if (storage.follow(side)) {
+                _this.rebuildLocation();
+                _this.respawnPlayerFrom('left');
+                _this.view.cancelTranslation();
+              }
+            }
+            if ((camera.x + _this.view.size.width) / location.cellSize < location.width) {
+              _this.view.translate(toRight);
             }
           }
         }
         if (key.isDown(walkLeftKey)) {
-          if (map.checkX(player.head, -1) && map.checkX(player.body, -1)) {
+          if (location.checkX(player.head, -1) && location.checkX(player.body, -1)) {
             player.move(left);
-            if (camera.x > 0) {
-              vector = [right, 0].point();
-              _this.view.translate(vector);
+            if ((side = location.checkBorder(player.body))) {
+              if (storage.follow(side)) {
+                _this.rebuildLocation();
+                _this.respawnPlayerFrom('right');
+                _this.view.translate(location.points.end);
+              }
             }
+            if (camera.x > 0) _this.view.translate(toLeft);
           }
         }
-        if (map.checkY(player.body, 1)) {
+        if (location.checkY(player.body, 1)) {
           player.fall(down);
           return;
         }
         if (key.isDown(makeJumpKey)) {
-          if (map.checkY(player.head, -1)) return player.jump(up);
+          if (location.checkY(player.head, -1)) return player.jump(up);
         }
       };
     };
 
     Manager.prototype.spawnPlayer = function() {
-      var coord, map, player, texture, textures, _ref;
-      _ref = this.opts, map = _ref.map, player = _ref.player, textures = _ref.textures;
-      coord = map.spawnPoint;
+      var player, point, points, texture, textures, _ref;
+      _ref = this.opts, player = _ref.player, textures = _ref.textures;
+      points = this.location.points;
       texture = textures.player;
-      player.spawn(coord);
-      return player.shape = new this.Raster(texture, coord);
+      point = points.left.clone();
+      player.shape = new this.Raster(texture);
+      return player.spawn(point);
     };
 
-    Manager.prototype.drawMap = function() {
-      var height, map, size, width,
+    Manager.prototype.respawnPlayerFrom = function(side) {
+      var player, point, points;
+      player = this.opts.player;
+      points = this.location.points;
+      point = points[side].clone();
+      point.y = player.body.y;
+      return player.spawn(point);
+    };
+
+    Manager.prototype.buildLocation = function() {
+      var height, location, width,
         _this = this;
-      map = this.opts.map;
-      height = map.height;
-      width = map.width;
-      size = map.cellSize;
+      location = this.location;
+      height = location.height;
+      width = location.width;
       return height.times(function(y) {
         return width.times(function(x) {
-          var block, rel;
-          block = map.matrix[y][x];
-          rel = [x, y].point();
-          if (block) return map.blocks[y][x] = _this.makeBlock(block, rel, size);
+          var id, point, relative, shape;
+          relative = [x, y].point();
+          point = location.absoluteFrom(relative);
+          if (id = location.blockAt(point)) {
+            shape = _this.makeBlock(id);
+            return location.spawnBlockAt(point, shape);
+          }
         });
       });
     };
 
-    Manager.prototype.makeBlock = function(type, rel, size) {
-      var coord, kind, texture, textures;
+    Manager.prototype.rebuildLocation = function() {
+      var player, storage, _ref;
+      _ref = this.opts, storage = _ref.storage, player = _ref.player;
+      this.location.destroy();
+      this.location = storage.current;
+      return this.buildLocation();
+    };
+
+    Manager.prototype.makeBlock = function(id) {
+      var kind, texture, textures;
       textures = this.opts.textures;
-      coord = rel.multiply(size).add(size / 2);
       kind = all.rand();
-      switch (type) {
-        case 1:
-          texture = textures["land" + kind];
-          return new this.Raster(texture, coord);
+      switch (id) {
+        case 'dirt':
+          texture = textures["dirt" + kind];
+          return new this.Raster(texture);
+        case 'stone':
+          texture = textures["stone" + kind];
+          return new this.Raster(texture);
+        default:
+          return null;
       }
     };
 

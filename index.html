@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<html>
 <head>
 
 	<title>Montage</title>
@@ -20,11 +21,12 @@
 	<!-- Interface       -->
 	<script src = "comp/Interface.js"          ></script>	
 
-	<!-- Resources       -->
-	<script src = "comp/Resources.js"          ></script>
+	<!-- Resource        -->
+	<script src = "comp/Resource/Storage.js"          ></script>
 	
 	<!-- Map             -->
-	<script src = "comp/Map.js"                ></script>
+	<script src = "comp/Map/Location.js"       ></script>
+	<script src = "comp/Map/Storage.js"        ></script>
 
 	<!-- Items           -->
 	<script src = "comp/Items/Container.js"    ></script>	
@@ -37,53 +39,74 @@
 	<script src = "comp/Manager.js"            ></script>
 
 	<!-- Controller      -->
-	<script src = "comp/App.js"               ></script>
+	<script src = "comp/App.js"                ></script>
 
-	<!-- Map Matrix      -->
-	<script src = "maps/basic.js"              ></script>
+	<!-- Maps            -->
+	<script src = "maps/verge.js"              ></script>
+	<script src = "maps/village.js"              ></script>
 </head>
 
 <body>
 	<header>
+		<div id = "logo"></div>
 	</header>
 
-	<section id = "menu" class = "general">
-		<div class = "section_header">
+	<!-- Menu -->
+	<section id = "menu" class = "section">
+		<div class = "sectionHeader">
 		</div>
-		<div id = "menu_background">
+		<div id = "menuBackground">
 			<div class = "frame">
-				<ul id = "menu_list" type = "none">
-					<li id = "start_game">Start Game</li>
-					<li id = "options"   >Options</li>
+				<ul id = "menuList">
+					<li class = "startGame"  >Start Game</li>
+					<li class = "openOptions">Options</li>
 				</ul>
 			</div>
 		</div>
-		<div class = "section_footer">
-		</div>
+		
 	</section>
 
-	<section id = "game" class = "general">
-		<div class = "section_header">
+	<!-- Game -->
+	<section id = "game" class = "section">
+		<div class = "sectionHeader">
+			<ul class = "buttons">
+				<li class = "openJournal">
+					Journal
+				</li>
+
+				<li class = "openMenu">
+					Back
+				</li>
+			</ul>
 		</div>
 		<div class = "frame">
 			<canvas id = "window" width = "720" height = "400"></canvas>
 		</div>
-		<div class = "section_footer">
-		</div>
 	</section>
 
-	<section id = "journal" class = "general">
-		<div class = "section_header">
+	<!-- Journal -->
+	<section id = "journal" class = "section">
+		<div class = "sectionHeader">
+			<ul class = "buttons">
+				<li class = "openGame">
+					Back
+				</li>
+			</ul>
 		</div>
 		<div class = "frame">
 			<div id = "inventory">
+				<h1 id = "inventorySign">
+					Inventory
+				</h1>
+
 				<table id = "list">
 				</table>
 			</div>
-			<div id = "skills">
+			<div id = "character">
+				<h1 id = "characterSign">
+					Character
+				</h1>
 			</div>
-		</div>
-		<div class = "section_footer">
 		</div>
 	</section>
 
@@ -94,14 +117,28 @@
 <script>	
 	window.onload = function()
 	{
-		var canvas = $('#window');
+		var 
+			canvas    = $('#window'),
 
-		var resources = new Resources({
-			textures : {
-				land0   : 'ress/textures/land0.png',
-				land1   : 'ress/textures/land1.png',
-				land2   : 'ress/textures/land2.png',
-				land3   : 'ress/textures/land3.png',
+			interface = new Interface,
+			app       = new App,
+			storage   = new Map.Storage,
+			resources = new Resource.Storage;
+
+		storage.load(mapset)
+
+		resources.load
+		({
+			textures : 
+			{
+				dirt0   : 'ress/textures/dirt0.png' ,
+				dirt1   : 'ress/textures/dirt1.png' ,
+				dirt2   : 'ress/textures/dirt2.png' ,
+				dirt3   : 'ress/textures/dirt3.png' ,
+				stone0  : 'ress/textures/stone0.png',
+				stone1  : 'ress/textures/stone1.png',
+				stone2  : 'ress/textures/stone2.png',
+				stone3  : 'ress/textures/stone3.png',
 
 				player        : 'ress/textures/player_right.png',
 				playerLeft    : 'ress/textures/player_left.png',
@@ -110,27 +147,33 @@
 			}
 		});
 
-		var 
-			interface = new Interface,
-			app       = new App;
+		interface.init
+		( 
+			app, 
+		{
+			game      : '#game'   ,
+			menu      : '#menu'   ,
+			options   : '#options',
+			journal   : '#journal',
+			list      : '#list'  
+		},
+		{
+			bStartGame   : '.startGame'  ,
+			bOpenOptions : '.openOptions',
+			bOpenJournal : '.openJournal',
+			bOpenGame    : '.openGame'   ,
+			bOpenMenu    : '.openMenu'
 
-		interface.init(app, {
-			game      : '#game'     ,
-			menu      : '#menu'     ,
-			options   : '#options'  ,
-			journal   : '#journal'  ,
-			list      : '#list',
-
-			bShowOptions : '#show_options',
-			bStartGame   : '#start_game'
 		});
 
-		app.init({
-			matrix    : matrix   ,
-			paper     : paper    ,
-			canvas    : canvas   ,
-			resources : resources,
-			interface : interface
+		app.init
+		({
+			'paper'     : paper    ,
+			'canvas'    : canvas   ,
+			'storage'   : storage  ,
+			'resources' : resources,
+			'interface' : interface
 		});
 	}
 </script>
+</html>

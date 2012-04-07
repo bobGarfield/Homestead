@@ -5,19 +5,83 @@ section#journal
 	display : none;
 }
 
-section#journal .frame
+section#journal div.frame
 {
+	border        : 10px solid #050505;
 	border-radius : 20px;
 	
-	background : url(../ress/graphics/journal_background.png);
+	background : url(../ress/graphics/journalBackground.png);
 }
 
-section#journal div#inventory
+section#journal h1
+{
+	margin  : 15px;
+
+	text-shadow : 0px 0px 30px black;
+}
+
+div#inventory
 {
 	position : absolute;
 
-	width  : 60%;
+	left : 20px;
+
+	width  : 60% ;
 	height : 100%;
 
-	border-radius : 20px;
+	text-align : center;
+
+	box-shadow: 0px 0px 5px 10px rgba(0, 0, 0, 0.8);
+
+	background : url(../ress/graphics/inventoryBackground.png);
+}
+
+table#list
+{
+	width : 100%;
+
+	margin-top : 10px;
+
+	background : #101010;
+	box-shadow : 0px 0px 15px 5px rgba(0, 0, 0, 0.5) inset;
+}
+
+table#list tr
+{
+	width : 100%;
+
+	padding : 10px;
+}
+
+table#list tr:hover
+{
+	background : #151515;
+
+	cursor : pointer;
+}
+
+table#list td
+{
+	width  : 50% ;
+	height : 30px;
+
+	text-align : center;
+}
+
+.currentItem
+{
+	background : #152535;
+	box-shadow : 0px 0px 15px 5px rgba(0, 0, 0, 0.5) inset;
+}
+
+div#character
+{
+	position : absolute;
+
+	right : 0;
+
+	width  : 40%;
+	height : 100%;
+
+	text-align : center;
 }

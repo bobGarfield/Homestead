@@ -1,58 +1,123 @@
-## Elements
-raw    = 'tr'
-column = 'td'
+## HTML Tags
+row  = 'tr'
+body = 'body'
 
-## Classes
-item = 'item'
+## HTML events
+onContextMenu = 'oncontextmenu'
+
+## CSS Classes
+itemClass        = 'item'
+currentItemClass = 'currentItem'
 
 ## Auxiliary functions
 
-# Make a position in list
-makeUnit = (id, text, number) ->
-	elem = make raw
-	elem.class = item
-	elem.id    = id
+# Make an item in list
+makeRow = (id, quantity) ->
+	item = make(row, itemClass, id)
 
-	name = make column
-	name.textContent = text
+	nameCell                 = item.insertCell 0
+	nameCell.textContent     = id
 
-	num  = make column
-	name.textContent = number
+	quantityCell             = item.insertCell 1
+	quantityCell.textContent = quantity
 
-	elem.appendChild name
-
-	console.log 'here'
+	return item
 
 class @Interface
 	
 	constructor : ->
+		preventDefaults($(body), onContextMenu)
 
-	init : (@app, opts) ->
-		for elem of opts
-			@[elem] = $(opts[elem])
+	importElements : ->
+		{buttons, elements} = @
 
-		@current = @menu
+		# Every interface element must single
+		for elem of elements
+			elements[elem] = $(elements[elem])
 
-		@bStartGame.onclick = =>
-			do @openGame
-			do @app.start
+		# Every button may not be single, so we must get each element
+		for elem of buttons
+			buttons[elem] = $$(buttons[elem])
 
-		preventDefaults(@game, 'oncontextmenu')
+	bindEvents : ->
+		{buttons, elements, app} = @
+
+		open = @open.bind @
+
+		# Binding onclick event for startGame buttons
+		elements.journal.onopen = =>
+			do @drawJournal
+
+		# Binding onclick event for startGame buttons
+		buttons.bStartGame.each (button) ->
+			button.onclick = ->
+				open elements.game
+				do app.start
+
+				# Rebinding
+				@textContent = 'Continue'
+				@onclick     = ->
+					open elements.game
+
+		# Binding onclick event for openOptions buttons
+		buttons.bOpenOptions.each (button) ->
+			button.onclick = ->
+				open elements.options
+
+		# Binding onclick event for openJournal buttons
+		buttons.bOpenJournal.each (button) ->
+			button.onclick = ->
+				open elements.journal
+
+				do elements.journal.onopen
+
+		# Binding onclick event for openGame buttons
+		buttons.bOpenGame.each (button) ->
+			button.onclick = ->
+				open elements.game
+
+		# Binding onclick event for openMenu buttons
+		buttons.bOpenMenu.each (button) ->
+			button.onclick = ->
+				open elements.menu
+
+	# Init interface
+	init : (@app, @elements, @buttons) ->
+		do @importElements
+		do @bindEvents
+
+		# Setting current section to menu section
+		@current = @elements.menu
 		
-	openGame : ->
-		toggleDisplay @current, 'none'
-		toggleDisplay @game,    'block'
+	# Make section current
+	open : (section) ->
+		{current} = @
 
-		@current = @game
+		toggleDisplay current, 'none'
+		toggleDisplay section, 'block'
 
-	openJournal : ->
-		toggleDisplay @current, 'none'
-		toggleDisplay @journal, 'block'
+		@current = section
 
-		@current = @journal
+	## Dom operations
 
-	drawContainer : (container) ->
-		container.blocks.each (number, block) =>
-			name   = makeName(block)
+	# Draw player's journal
+	drawJournal : ->
+		{container} = @
+		{list     } = @elements
 
-			makeUnit(block, name, number)
+		removeRowsFrom list
+
+		for id, quantity of container.blocks
+			item = makeRow(id, quantity)
+
+			item.className = currentItemClass if id is container.current
+
+			item.onclick = ->
+				resetClassNamesFor list.children
+
+				container.current = @id
+				@className        = currentItemClass
+
+			list.appendChild item
+
+		# TODO: Items visualization in next version

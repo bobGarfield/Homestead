@@ -11,7 +11,9 @@
       }
 
       Hero.prototype.spawn = function(coord) {
+        var _ref;
         this.coord = coord;
+        return (_ref = this.shape) != null ? _ref.position = coord : void 0;
       };
 
       Hero.prototype.move = function(dist) {

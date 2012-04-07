@@ -10,6 +10,7 @@ namespace 'Player', ->
 			@inventory = new Inventory
 
 		spawn : (@coord) ->
+			@shape?.position = coord
 
 		move : (dist) ->
 			@shape.position.x += dist

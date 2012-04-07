@@ -5,17 +5,17 @@
     function App() {}
 
     App.prototype.init = function(opts) {
-      var canvas, interface, map, matrix, paper, player, resources;
-      paper = opts.paper, matrix = opts.matrix, canvas = opts.canvas, resources = opts.resources, interface = opts.interface;
-      map = new Map(matrix);
+      var canvas, interface, paper, player, storage, textures;
+      paper = opts.paper, storage = opts.storage, canvas = opts.canvas, interface = opts.interface;
+      textures = opts.resources.textures;
       player = new Player.Hero;
       return this.manager = new Manager({
-        interface: interface,
-        textures: resources.textures,
-        canvas: canvas,
-        player: player,
-        paper: paper,
-        map: map
+        'interface': interface,
+        'textures': textures,
+        'storage': storage,
+        'canvas': canvas,
+        'player': player,
+        'paper': paper
       });
     };
 

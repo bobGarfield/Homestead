@@ -7,6 +7,10 @@ right =  5 #[px]
 up    = 50 #[px]
 down  =  5 #[px]
 
+## Vectors
+toLeft  = [left,  0].point()
+toRight = [right, 0].point()
+
 ## Keyboard keys
 walkLeftKey    = 'a'
 walkRightKey   = 'd'
@@ -26,23 +30,29 @@ class @Manager
 		paper.install @
 
 	start : ->
-		do @drawMap
+		{interface, player, storage} = @opts
+
+		# Autoselect location
+		@location = storage.current
+
+		# Linking interface with player inventory container
+		interface.container = player.inventory.container
+
+		do @view.resetCamera
+
+		do @buildLocation
 		do @spawnPlayer
 		do @defineLoop
 		do @defineMouseHandlers
-		do @defineKeyboardHandlers
+		do @defineKeyboardHandlers		
 
 	defineKeyboardHandlers : ->
 		{interface, player, textures} = @opts
+		
+		{journal} = interface.elements
 
 		# Defining onKeyDown handlers
 		@tool.onKeyDown = (event) =>
-			
-			# Hotkeys
-			if event.key is openJournalKey
-				do interface.openJournal
-				do interface.drawContainer(player.inventory.container)
-
 			# Texture handle
 			if event.key is walkRightKey
 				player.shape.image = textures.playerRun
@@ -61,112 +71,162 @@ class @Manager
 				player.shape.image = textures.playerLeft
 
 	defineMouseHandlers : ->
-		{player, map} = @opts
-		
+		{player} = @opts
 
 		# Defining onMouseDown handler
 		@tool.onMouseDown = (event) =>
-			dist = @view.camera.x
+			{location} = @
 
-			coord     = event.point.clone()
-			coord.x  += dist
+			camera = @view.camera.x
+			point  = event.point.clone()
+			
+			# Adjusting for camera and whole cell
+			point.x += camera - location.cellSize/4
 
+			# Thanks to motherfucking paper.js for this
 			button    = event.event.button
+
 			inventory = player.inventory
 
 			switch button
-				
-				# Destroy block (by left mouse button)
+				# Harm block (by left mouse button)
 				when leftButton
-					block = map.blockAt coord
+					id = location.blockAt point
 
-					inventory.put block
+					inventory.put id
 
-					map.destroyBlockAt coord
+					location.destroyBlockAt point
 				
 				# Put block (by right mouse button)
 				when rightButton
-					map.putBlockTo coord, inventory.current
+					
+					# Checking overlap
+					unless location.blockAt point
+						id    = inventory.takeBlock()
+						shape = @makeBlock(id)
+					
+						location.putBlockTo(point, id, shape)
 
 	defineLoop : ->
-		{map, player} = @opts
-
-		key    = @Key
-		camera = @view.camera = [0, 0].point()
+		{player, storage} = @opts
+		
+		key = @Key
 
 		# Defining onFrame handler
-		@view.onFrame = =>
+		@view.onFrame = =>	
+			{location} = @
+			{camera  } = @view
 			
 			# Checking right
 			if key.isDown walkRightKey
 
-				# Checking map
-				if map.checkX(player.head, 0) and map.checkX(player.body, 0)
+				# Checking location
+				if location.checkX(player.head, 0) and location.checkX(player.body, 0)
 					player.move right
 
-					# Checking camera
-					if (camera.x+@view.size.width)/map.cellSize < map.width
-						vector = [left, 0].point()
+					# Checking location change
+					if (side = location.checkBorder(player.body))
+						if storage.follow side
+							do @rebuildLocation
 
-						@view.translate vector
+							@respawnPlayerFrom 'left'
+
+							do @view.cancelTranslation
+
+					# Checking camera
+					if (camera.x+@view.size.width)/location.cellSize < location.width
+						@view.translate toRight
 
 			# Checking left
 			if key.isDown walkLeftKey
 				
-				# Checking map
-				if map.checkX(player.head, -1) and map.checkX(player.body, -1)
+				# Checking location
+				if location.checkX(player.head, -1) and location.checkX(player.body, -1)
 					player.move left
+
+					# Checking location change
+					if (side = location.checkBorder(player.body))
+						if storage.follow side
+							do @rebuildLocation
+
+							@respawnPlayerFrom 'right'
+
+							@view.translate location.points.end
 
 					# Checking camera
 					if camera.x > 0
-						vector = [right, 0].point()
+						@view.translate toLeft
 
-						@view.translate vector
-
-			# Checking gravity. Checking map
-			if map.checkY(player.body, 1)
+			# Checking gravity. Checking location
+			if location.checkY(player.body, 1)
 				player.fall down
 				return
 
 			# Checking jump
 			if key.isDown makeJumpKey
 				
-				# Checking map
-				if map.checkY(player.head, -1)
+				# Checking location
+				if location.checkY(player.head, -1)
 					player.jump up
 
 	spawnPlayer : ->
-		{map, player, textures} = @opts
-
-		coord   = map.spawnPoint
+		{player, textures} = @opts
+		{points          } = @location
+		
 		texture = textures.player
+		point   = points.left.clone()
+		
+		player.shape = new @Raster texture
+		
+		player.spawn point
 
-		player.spawn coord
-		player.shape = new @Raster texture, coord
+	respawnPlayerFrom: (side) ->
+		{player} = @opts
+		{points} = @location
 
-	drawMap : ->
-		{map} = @opts
+		point   = points[side].clone()
+		point.y = player.body.y
 
-		height = map.height
-		width  = map.width
-		size   = map.cellSize
+		player.spawn point
 
-		(height).times (y) =>
-			(width).times (x) =>
-				block = map.matrix[y][x]
-				rel   = [x, y].point()
+	buildLocation : ->
+		{location} = @
 
-				map.blocks[y][x] = @makeBlock(block, rel, size) if block
+		height = location.height
+		width  = location.width
 
-	makeBlock  : (type, rel, size) ->
+		height.times (y) =>
+			width.times (x) =>
+				relative = [x, y].point()
+				point    = location.absoluteFrom relative
+
+				# If there must be block
+				if id = location.blockAt point
+					shape = @makeBlock id
+
+					location.spawnBlockAt point, shape
+
+	rebuildLocation : ->
+		{storage, player} = @opts
+
+		do @location.destroy
+
+		@location = storage.current
+
+		do @buildLocation
+
+	## Auxiliary methods
+	makeBlock  : (id) ->
 		{textures} = @opts
 
-		coord = rel.multiply(size).add(size/2)
-		kind  = (all).rand()
+		kind  = all.rand()
 		
-		switch type
-			# Land
-			when 1
-				texture = textures["land#{kind}"]
-
-				return new @Raster(texture, coord)
+		switch id
+			when 'dirt'
+				texture = textures["dirt#{kind}"]
+				return new @Raster texture
+			when 'stone'
+				texture = textures["stone#{kind}"]
+				return new @Raster texture
+			else
+				return null

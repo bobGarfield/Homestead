@@ -5,6 +5,9 @@ html, body
 	
 	margin  : 0;
 	padding : 0;
+
+	font-family : Miele;
+	color       : white;
 }
 
 body
@@ -36,7 +39,7 @@ footer
 	background : url(../ress/graphics/footer.png) repeat-x;
 }
 
-section.general
+.section
 {
 	position : absolute;
 
@@ -47,7 +50,7 @@ section.general
 	height : auto;
 }
 
-div.frame
+.frame
 {
 	position : absolute;
 
@@ -60,27 +63,52 @@ div.frame
 	margin : -210px -385px;
 }
 
-div.section_header
+.sectionHeader
 {
 	position : absolute;
 	z-index : 1;
 
 	top : 0;
 
-	width  : 100% ;
-	height : 100px;
+	width  : 100%;
+	height : 35px;
 
-	background : url(../ress/graphics/section_header.png) top center repeat-x;
+	background : url(../ress/graphics/sectionHeader.png) top center repeat-x;
 }
 
-div.section_footer
+.buttons
 {
-	position : absolute;
+	position : relative;
 
-	bottom : 0;
+	width  : 50% ;
+	height : 100%;
 
-	width  : 100% ;
-	height : 100px;
+	margin :  7.5px auto;
 
-	background : url(../ress/graphics/section_footer.png) bottom center repeat-x;
+	text-align : center;
+	font-size  : 12.5px;
+
+}
+
+.buttons li
+{
+	display : inline;
+
+	margin-right : 20px;
+	padding      : 5px;
+
+	border        : solid black 1px;
+	border-radius : 10px;
+
+	list-style-type : none;
+	background      : #101010;
+	
+	box-shadow : 0px 0px 5px 2px rgba(0, 0, 0, 0.5) inset;
+}
+
+.buttons li:hover
+{
+	background : #151515;
+
+	cursor : pointer;
 }

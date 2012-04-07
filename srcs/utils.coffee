@@ -1,21 +1,34 @@
 global ?= window
 
-## Dom
+## Global
 
-# Short querySelector
-global.$ = (query) ->
-	global.document.querySelector(query)
+# Swap two variables
+global.swap = (one, two) ->
+	temp = one
 
-# Set display style
-global.toggleDisplay = (element, type) ->
-	element.style.display = type
+	one = two
+	two = temp
 
-global.preventDefaults = (element, event) ->
-	element[event] = ->
-		return false
+# Make namespace
+global.namespace = (name, body) ->
+	space = @[name] ?= {}
+	space.namespace ?= global.namespace
+	body.call space
 
-global.make = (tag) ->
-	return global.document.createElement tag
+## Function
+
+# Define setter
+Function::set = (prop, callback) ->
+	@::__defineSetter__ prop, callback
+	
+# Define getter
+Function::get = (prop, callback) ->
+	@::__defineGetter__ prop, callback
+
+# Define both setter and getter
+Function::both = (prop, opts) ->
+	@::__defineSetter__ prop, opts.set
+	@::__defineGetter__ prop, opts.get 
 
 ## Number
 
@@ -36,22 +49,73 @@ Number::floor = ->
 Number::round = ->
 	Math.round @
 
-## Global
+## Array
 
-# Make namespace
-global.namespace = (name, body) ->
-	space = @[name] ?= {}
-	space.namespace ?= global.namespace
-	body.call space
+# Short forEach
+Array::each = Array::forEach
+
+Array.both 'first',
+	get : (      -> return @[0]),
+	set : ((val) -> @[0] = val )
+
+Array.both 'last',
+	get : (      -> return @[@length]),
+	set : ((val) -> @[@length] = val )
+
+Array.both 'second',
+	get : (      -> return @[1]),
+	set : ((val) -> @[1] = val )
+
+Array.both 'penult',
+	get : (      -> return @[@length-1]),
+	set : ((val) -> @[@length-1] = val )
+
+## Dom
+
+# Short querySelector
+global.$ = (query) ->
+	global.document.querySelector(query)
+
+# Short querySelectorAll
+global.$$ = (query) ->
+	global.document.querySelectorAll(query)
+
+# Set display style
+global.toggleDisplay = (element, type) ->
+	element.style.display = type
+
+global.preventDefaults = (element, event) ->
+	element[event] = ->
+		return false
+
+# Short createElement
+global.make = (tag, className = '', id = '') ->
+	elem = global.document.createElement tag
+
+	elem.id        = id
+	elem.className = className
+
+	return elem
+
+global.resetClassNamesFor = (elements) ->
+	elements.each (element) ->
+		element.className = ''
+
+# Iterator for NodeList
+NodeList      ::each = Array::each
+
+HTMLCollection::each = Array::each
+
+# Remove all rows from table
+global.removeRowsFrom = (table) ->
+	while table.rows.length
+		table.deleteRow 0
 
 ## Array + Paper
 
 # Make point/vector from array
 Array::point = ->
 	new global.paper.Point @
-
-# Short forEach
-Array::each = ->
 
 ## Paper
 
@@ -62,35 +126,42 @@ global.paper.Project::draw = (context, matrix) ->
 	camera = @view.camera
 	size   = @view.size
 
+	# Adding camera coordinates to zero point
 	context.clearRect(camera.x, camera.y, size.width, size.height)
 	
 	draw.call(@, context, matrix)
 
-# paper.View::scrollBy canvas analog
+# paper.View::scrollBy more optimised analog
 global.paper.View::translate = (point) ->
-	x = point.x
-	y = point.y
+	{x, y} = point
 
-	@_context.translate x, y
+	@_context.translate -x, -y
 	
-	@camera.x -= x
-	@camera.y -= y
+	@camera.x += x
+	@camera.y += y
 
-# Multiply
+# Allias
+global.paper.View::translateTo = global.paper.View::translate
+
+global.paper.View::resetCamera = ->
+	@camera = [0, 0].point()
+
+global.paper.View::cancelTranslation = ->
+	@translate @camera.multiply(-1)
+
+	do @resetCamera
+
+global.paper.View::applyTranslation = ->
+	@translate @camera
+
+# Multiply @
 global.paper.Point::multiply = (n) ->
 	new global.paper.Point @x*n, @y*n
 
-# Add
+# Divide @
+global.paper.Point::divide = (n) ->
+	new global.paper.Point @x/n, @y/n
+
+# Floor @
 global.paper.Point::floor = ->
 	new global.paper.Point @x.floor(), @y.floor()
-
-## Accessor for Major Browsers
-Function::set = (prop, callback) ->
-	@::__defineSetter__ prop, callback
-	
-Function::get = (prop, callback) ->
-	@::__defineGetter__ prop, callback
-
-Function::duo = (prop, opts) ->
-	@::__defineSetter__ prop, opts.set
-	@::__defineGetter__ prop, opts.get 

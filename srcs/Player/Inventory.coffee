@@ -1,4 +1,8 @@
-Container = @Items.Container
+## Import
+{Container} = @Items
+
+## Auxiliary regexp patterns
+block = /(dirt|stone|wood)/
 
 namespace 'Player', ->
 
@@ -6,12 +10,22 @@ namespace 'Player', ->
 
 		constructor : ->
 			@container = new Container
+			@current   = null
 
-		put : (thing) ->
-			contr = @container
-			digit = /\d/
+		# Allocate and put item
+		put : (id) ->
+			return unless id
 
-			if digit.test thing
-				contr.blocks[thing]++
+			if block.test id
+				@container.putBlock id
 			else
-				contr.items.push thing
+				@container.putItem  id
+
+		# Return current block and decrease it's quantity
+		takeBlock : ->
+			{blocks, current} = @container
+
+			if blocks[current]
+				--blocks[current]
+				
+				return current

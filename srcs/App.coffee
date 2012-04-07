@@ -3,18 +3,18 @@ class @App
 	constructor : ->
 
 	init : (opts) ->
-		{paper, matrix, canvas, resources, interface} = opts
+		{paper, storage, canvas, interface} = opts
+		{textures} = opts.resources
 
-		map    = new Map(matrix)
-		player = new Player.Hero
+		player   = new Player.Hero
 
 		@manager = new Manager
-			interface  : interface
-			textures  : resources.textures
-			canvas    : canvas
-			player    : player
-			paper     : paper
-			map       : map
+			'interface' : interface
+			'textures'  : textures
+			'storage'   : storage
+			'canvas'    : canvas
+			'player'    : player
+			'paper'     : paper
 
 	start : ->
 		do @manager.start
