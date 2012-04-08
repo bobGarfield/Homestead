@@ -40,6 +40,7 @@ namespace "Map", ->
 		constructor : (@matrix, @index) ->
 			@points = {}
 
+			# TODO: Do something with this
 			@points.left  = @absoluteFrom([3,         3].point())
 			@points.right = @absoluteFrom([@width-4,  3].point())
 			@points.end   = @absoluteFrom([@width-20, 0].point())

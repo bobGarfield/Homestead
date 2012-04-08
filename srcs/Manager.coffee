@@ -216,6 +216,8 @@ class @Manager
 		do @buildLocation
 
 	## Auxiliary methods
+	
+	# TODO: Make more abstract
 	makeBlock  : (id) ->
 		{textures} = @opts
 

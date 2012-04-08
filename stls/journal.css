@@ -7,7 +7,6 @@ section#journal
 
 section#journal div.frame
 {
-	border        : 10px solid #050505;
 	border-radius : 20px;
 	
 	background : url(../ress/graphics/journalBackground.png);

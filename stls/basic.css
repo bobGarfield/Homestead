@@ -27,6 +27,18 @@ header
 	background : url(../ress/graphics/header.png) repeat-x;
 }
 
+div#logo
+{
+	position : relative;
+
+	width  : 500px;
+	height : 50px;
+
+	margin : 0 auto;
+
+	background : url(../ress/graphics/logo.png);
+}
+
 footer
 {
 	position : absolute;
@@ -97,7 +109,7 @@ footer
 	margin-right : 20px;
 	padding      : 5px;
 
-	border        : solid black 1px;
+	border        : solid thin black;
 	border-radius : 10px;
 
 	list-style-type : none;
