@@ -92,10 +92,17 @@ namespace "Map", ->
 				else
 					return null
 
-		checkWidth : (x) ->
+		# Check if x less than @width
+		checkWidth  : (x) ->
 			x = x/cellSize
 
 			return x < @width
+
+		# Check if y less than @height
+		checkHeight : (y) ->
+			y = y/cellSize
+
+			return y < @height
 
 		# Destroy block at point
 		destroyBlockAt : (point) ->

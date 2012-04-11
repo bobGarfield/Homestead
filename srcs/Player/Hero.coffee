@@ -17,8 +17,8 @@ namespace 'Player', ->
 			@coord.x += dist
 
 		jump : (height) ->
-			@shape.position.y -= height
-			@coord.y -= height
+			@shape.position.y += height
+			@coord.y += height
 
 		fall : (height) ->
 			@shape.position.y += height

@@ -2,14 +2,16 @@
 all   =  4
 
 ## Directions
-left  = -5 #[px]
-right =  5 #[px]
-up    = 50 #[px]
-down  =  5 #[px]
+left  =  -5 #[px]
+right =   5 #[px]
+up    = -50 #[px]
+down  =   5 #[px]
 
 ## Vectors
 toLeft  = [left,  0].point()
 toRight = [right, 0].point()
+toUp    = [0,    up].point()
+toDown  = [0,  down].point()
 
 ## Keyboard keys
 walkLeftKey    = 'a'
@@ -77,11 +79,14 @@ class @Manager
 		@tool.onMouseDown = (event) =>
 			{location} = @
 
-			camera = @view.camera.x
-			point  = event.point.clone()
+			cx = @view.camera.x
+			cy = @view.camera.y
+
+			point = event.point.clone()
 			
 			# Adjusting for camera and whole cell
-			point.x += camera - location.cellSize/4
+			point.x += cx - location.cellSize/4
+			point.y += cy
 
 			# Thanks to motherfucking paper.js for this
 			button    = event.event.button
@@ -110,8 +115,10 @@ class @Manager
 	defineLoop : ->
 		{player, storage} = @opts
 		
-		key   = @Key
-		width = @view.size.width
+		key = @Key
+		
+		vwidth  = @view.size.width
+		vheight = @view.size.height
 
 		# Defining onFrame handler
 		@view.onFrame = =>	
@@ -135,7 +142,7 @@ class @Manager
 							do @view.cancelTranslation
 
 					# Checking camera
-					if location.checkWidth(camera.x+width) and player.body.x > width/2	
+					if location.checkWidth(camera.x+vwidth) and player.body.x > vwidth/2	
 
 						@view.translate toRight
 
@@ -156,12 +163,17 @@ class @Manager
 							@view.translate location.points.end
 
 					# Checking camera
-					if camera.x > 0 and location.checkWidth(player.body.x+width/2)
+					if camera.x > 0 and location.checkWidth(player.body.x+vwidth/2)
 						@view.translate toLeft
 
-			# Checking gravity. Checking location
+			# Checking gravity
 			if location.checkY(player.body, 1)
 				player.fall down
+
+				# Checking camera
+				if location.checkHeight(camera.y+vheight) and player.body.y > vheight/2
+					@view.translate toDown
+
 				return
 
 			# Checking jump
@@ -170,6 +182,10 @@ class @Manager
 				# Checking location
 				if location.checkY(player.head, -1)
 					player.jump up
+
+					# Checking camera
+					if camera.y > 0 and location.checkHeight(player.body.y+vheight/2)
+						@view.translate toUp
 
 	spawnPlayer : ->
 		{player, textures} = @opts
