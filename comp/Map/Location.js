@@ -98,6 +98,11 @@
         }
       };
 
+      Location.prototype.checkWidth = function(x) {
+        x = x / cellSize;
+        return x < this.width;
+      };
+
       Location.prototype.destroyBlockAt = function(point) {
         var relative, x, y, _ref;
         point = point.add(-cellSize / 4);

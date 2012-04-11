@@ -92,6 +92,11 @@ namespace "Map", ->
 				else
 					return null
 
+		checkWidth : (x) ->
+			x = x/cellSize
+
+			return x < @width
+
 		# Destroy block at point
 		destroyBlockAt : (point) ->
 			# Adjusting for one cell

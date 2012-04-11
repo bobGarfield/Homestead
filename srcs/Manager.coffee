@@ -110,7 +110,8 @@ class @Manager
 	defineLoop : ->
 		{player, storage} = @opts
 		
-		key = @Key
+		key   = @Key
+		width = @view.size.width
 
 		# Defining onFrame handler
 		@view.onFrame = =>	
@@ -134,7 +135,8 @@ class @Manager
 							do @view.cancelTranslation
 
 					# Checking camera
-					if (camera.x+@view.size.width)/location.cellSize < location.width
+					if location.checkWidth(camera.x+width) and player.body.x > width/2	
+
 						@view.translate toRight
 
 			# Checking left
@@ -154,7 +156,7 @@ class @Manager
 							@view.translate location.points.end
 
 					# Checking camera
-					if camera.x > 0
+					if camera.x > 0 and location.checkWidth(player.body.x+width/2)
 						@view.translate toLeft
 
 			# Checking gravity. Checking location
