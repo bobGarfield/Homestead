@@ -25,11 +25,11 @@
 | + Textures
 | + Animation
 |
-| # 0.5
+| # 0.5 (Done)
 | + Menu
 | + Build System
 | + Inventory System
-| - Locations System
+| + Locations System
 |
 | # 0.9
 | - Perks System
