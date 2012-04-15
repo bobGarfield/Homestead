@@ -103,11 +103,10 @@ global.resetClassNamesFor = (elements) ->
 
 # Iterator for NodeList
 NodeList      ::each = Array::each
-
 HTMLCollection::each = Array::each
 
 # Remove all rows from table
-global.removeRowsFrom = (table) ->
+global.removeItemsFrom = (table) ->
 	while table.rows.length
 		table.deleteRow 0
 
@@ -147,9 +146,9 @@ global.paper.View::resetCamera = ->
 	@camera = [0, 0].point()
 
 global.paper.View::cancelTranslation = ->
-	@translate @camera.multiply(-1)
+	vector = [-@camera.x, 0].point()
 
-	do @resetCamera
+	@translate vector
 
 global.paper.View::applyTranslation = ->
 	@translate @camera

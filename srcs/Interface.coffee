@@ -7,21 +7,46 @@ onContextMenu = 'oncontextmenu'
 
 ## CSS Classes
 itemClass        = 'item'
+savegameClass    = 'savegame'
 currentItemClass = 'currentItem'
+
+## Constant interface elements
+elements =
+	# Sections
+	menu    : '#menu'
+	loader  : '#loader'
+	options : '#options'
+	game    : '#game'
+	journal : '#journal'
+	ingame  : '#ingame'
+	
+	# Other Elements
+	inventoryList : '#inventoryList'
+	loaderList    : '#loaderList'
+
+## Constant buttons
+buttons = 
+	startGame     : '.startGame'
+	saveGame      : '.saveGame'
+	switchJournal : '.switchJournal'
+	switchLoader  : '.switchLoader'
+	openOptions   : '.openOptions'
+	openGame      : '.openGame'
+	openMenu      : '.openMenu'
+	openIngame    : '.openIngame'
 
 ## Auxiliary functions
 
 # Make an item in list
-makeRow = (id, quantity) ->
-	item = make(row, itemClass, id)
+makeItem = (args...) ->
+	item = make row
 
-	nameCell                 = item.insertCell 0
-	nameCell.textContent     = id
-
-	quantityCell             = item.insertCell 1
-	quantityCell.textContent = quantity
+	args.each (text, index) ->
+		cell = item.insertCell index
+		cell.textContent = text
 
 	return item
+
 
 class @Interface
 	
@@ -29,57 +54,56 @@ class @Interface
 		preventDefaults($(body), onContextMenu)
 
 	importElements : ->
-		{buttons, elements} = @
-
 		# Every interface element must single
-		for elem of elements
-			elements[elem] = $(elements[elem])
+		for id of elements
+			elements[id] = $(elements[id])
 
 		# Every button may not be single, so we must get each element
-		for elem of buttons
-			buttons[elem] = $$(buttons[elem])
+		for type of buttons
+			buttons[type] = $$(buttons[type])
+
+		@elements = elements
+		@buttons  = buttons
 
 	bindEvents : ->
 		{buttons, elements, app} = @
 
-		open = @open.bind @
+		open   = @open.bind @
+		prefix = /(open)/g
 
-		# Binding onclick event for startGame buttons
-		elements.journal.onopen = =>
-			do @drawJournal
+		for type, collection of buttons then do ->
+			collection.each (button) ->
+				section = elements[type.replace(prefix, '').toLowerCase()]
 
-		# Binding onclick event for startGame buttons
-		buttons.bStartGame.each (button) ->
-			button.onclick = ->
+				# Check if button is special
+				return unless section
+
+				button.onclick = -> open section
+
+		# Setting up special handlers
+		buttons.startGame.each (button) =>
+			button.onclick = =>
 				open elements.game
+
 				do app.start
 
-				# Rebinding
-				@textContent = 'Continue'
-				@onclick     = ->
-					open elements.game
+		buttons.saveGame.each (button) =>
+			button.onclick = =>
+				do app.saveGame
 
-		# Binding onclick event for openOptions buttons
-		buttons.bOpenOptions.each (button) ->
-			button.onclick = ->
-				open elements.options
+				#showText 'Saved'
 
-		# Binding onclick event for openJournal buttons
-		buttons.bOpenJournal.each (button) ->
-			button.onclick = ->
+		buttons.switchJournal.each (button) =>
+			button.onclick = =>
 				open elements.journal
 
-				do elements.journal.onopen
+				do @drawJournal
 
-		# Binding onclick event for openGame buttons
-		buttons.bOpenGame.each (button) ->
-			button.onclick = ->
-				open elements.game
+		buttons.switchLoader.each (button) =>
+			button.onclick = =>
+				open elements.loader
 
-		# Binding onclick event for openMenu buttons
-		buttons.bOpenMenu.each (button) ->
-			button.onclick = ->
-				open elements.menu
+				do @drawLoader
 
 	# Init interface
 	init : (@app, @elements, @buttons) ->
@@ -102,22 +126,41 @@ class @Interface
 
 	# Draw player's journal
 	drawJournal : ->
-		{container} = @
-		{list     } = @elements
+		{container         } = @
+		{inventoryList     } = @elements
 
-		removeRowsFrom list
+		removeItemsFrom inventoryList
 
 		for id, quantity of container.blocks
-			item = makeRow(id, quantity)
+			item = makeItem(id, quantity)
 
-			item.className = currentItemClass if id is container.current
+			item.id        = id
+			item.className = id is container.current && currentItemClass || itemClass
 
 			item.onclick = ->
-				resetClassNamesFor list.children
+				resetClassNamesFor inventoryList.children
 
 				container.current = @id
 				@className        = currentItemClass
 
-			list.appendChild item
+			inventoryList.appendChild item
 
-		# TODO: Items visualization in next version
+	# Draw App's loader
+	drawLoader : ->
+		{app       } = @
+		{loaderList} = @elements
+
+		saves = app.getSaves()
+
+		removeItemsFrom loaderList
+
+		for time of saves
+			item = makeItem(time)
+
+			item.id = time
+			item.className = savegameClass
+
+			item.onclick = -> 
+				app.loadState @id
+
+			loaderList.appendChild item

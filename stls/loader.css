@@ -1,0 +1,49 @@
+section#loader
+{
+	background : black;
+
+	display : none;
+}
+
+section#loader div.box
+{
+	border-radius : 20px;
+
+	text-align : center;
+
+	background : url(../ress/graphics/boxBackground.png);
+}
+
+table#loaderList
+{
+	width : 100%;
+
+	margin-top : 10px;
+
+	background : #101010;
+	box-shadow : 0px 0px 15px 5px rgba(0, 0, 0, 0.5) inset;
+
+	overflow-y : scroll;
+}
+
+table#loaderList tr
+{
+	width : 100%;
+
+	padding : 20px;
+}
+
+table#loaderList tr:hover
+{
+	background : #151515;
+
+	cursor : pointer;
+}
+
+table#loaderList td
+{
+	width  : 50% ;
+	height : 40px;
+
+	text-align : center;
+}

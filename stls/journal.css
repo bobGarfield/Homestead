@@ -5,18 +5,11 @@ section#journal
 	display : none;
 }
 
-section#journal div.frame
+section#journal div.box
 {
 	border-radius : 20px;
 	
-	background : url(../ress/graphics/journalBackground.png);
-}
-
-section#journal h1
-{
-	margin  : 15px;
-
-	text-shadow : 0px 0px 30px black;
+	background : url(../ress/graphics/boxBackground.png);
 }
 
 div#inventory
@@ -35,7 +28,7 @@ div#inventory
 	background : url(../ress/graphics/inventoryBackground.png);
 }
 
-table#list
+table#inventoryList
 {
 	width : 100%;
 
@@ -45,21 +38,21 @@ table#list
 	box-shadow : 0px 0px 15px 5px rgba(0, 0, 0, 0.5) inset;
 }
 
-table#list tr
+table#inventoryList tr
 {
 	width : 100%;
 
 	padding : 10px;
 }
 
-table#list tr:hover
+table#inventoryList tr:hover
 {
 	background : #151515;
 
 	cursor : pointer;
 }
 
-table#list td
+table#inventoryList td
 {
 	width  : 50% ;
 	height : 30px;

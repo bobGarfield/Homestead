@@ -1,50 +1,57 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 	<title>Homestead</title>
+
 	<meta charset = "utf-8"></meta>
 
-	<!-- Style           -->
-	<link  href = "stls/fonts.css"    rel = "stylesheet"/>
-	<link  href = "stls/basic.css"    rel = "stylesheet"/>
-	<link  href = "stls/menu.css"     rel = "stylesheet"/>
-	<link  href = "stls/game.css"     rel = "stylesheet"/>
-	<link  href = "stls/journal.css"  rel = "stylesheet"/>
+	<!-- Beta Icon -->
+	<link href = "http://png-2.findicons.com/files//icons/719/crystal_clear_actions/64/gohome.png" rel = "icon"/>
 
-	<!-- Paper.js        -->
+	<!-- Style -->
+	<link href = "stls/fonts.css"   rel = "stylesheet"/>
+	<link href = "stls/basic.css"   rel = "stylesheet"/>
+	<link href = "stls/menu.css"    rel = "stylesheet"/>
+	<link href = "stls/game.css"    rel = "stylesheet"/>
+	<link href = "stls/ingame.css"  rel = "stylesheet"/>
+	<link href = "stls/journal.css" rel = "stylesheet"/>
+	<link href = "stls/loader.css"  rel = "stylesheet"/>
+	<link href = "stls/options.css" rel = "stylesheet"/>
+	
+	<!-- Paper.js -->
 	<script src = "libs/paper.js/paper.js"     ></script>
 
-	<!-- Utils           -->
+	<!-- Utils -->
 	<script src = "comp/utils.js"              ></script>
 	
-	<!-- Interface       -->
+	<!-- Interface -->
 	<script src = "comp/Interface.js"          ></script>	
 
-	<!-- Resource        -->
-	<script src = "comp/Resource/Storage.js"          ></script>
+	<!-- Resources -->
+	<script src = "comp/Resources/Storage.js"   ></script>
 	
-	<!-- Map             -->
-	<script src = "comp/Map/Location.js"       ></script>
-	<script src = "comp/Map/Storage.js"        ></script>
+	<!-- Maps -->
+	<script src = "comp/Maps/Location.js"       ></script>
+	<script src = "comp/Maps/Storage.js"        ></script>
 
-	<!-- Items           -->
+	<!-- Items -->
 	<script src = "comp/Items/Container.js"    ></script>	
 
-	<!-- Player          -->
+	<!-- Player -->
 	<script src = "comp/Player/Inventory.js"   ></script>
 	<script src = "comp/Player/Hero.js"        ></script>
 
-	<!-- General Manager -->
-	<script src = "comp/Manager.js"            ></script>
+	<!-- Control -->
+	<script src = "comp/Control/State.js"      ></script>
+	<script src = "comp/Control/Manager.js"    ></script>
 
-	<!-- Controller      -->
+	<!-- General Controller -->
 	<script src = "comp/App.js"                ></script>
 
-	<!-- Maps            -->
+	<!-- Maps -->
 	<script src = "maps/verge.js"              ></script>
 	<script src = "maps/village.js"            ></script>
-	<script src = "maps/basic.js"            ></script>
+	<script src = "maps/basic.js"              ></script>
 </head>
 
 <body>
@@ -57,30 +64,63 @@
 		<div class = "sectionHeader">
 		</div>
 		<div id = "menuBackground">
-			<div class = "frame">
+			<div class = "box">
 				<ul id = "menuList">
-					<li class = "startGame"  >Start Game</li>
-					<li class = "openOptions">Options</li>
+					<li class = "startGame"    >Start Game</li>
+					<li class = "switchLoader" >Load Game</li>
+					<li class = "openOptions"  >Options</li>
+					<li class = "openAbout"    >About</li>
+				</ul>
+			</div>	
+		</div>
+	</section>
+
+	<!-- Ingame -->
+	<section id = "ingame" class = "section">
+		<div class = "sectionHeader">
+		</div>
+		<div id = "ingameBackground">
+			<div class = "box">
+				<ul id = "ingameList">
+					<li class = "openGame"     >Continue</li>
+					<li class = "switchLoader" >Load Game</li>
+					<li class = "saveGame"     >Save Game</li>
+					<li class = "openOptions"  >Options</li>
+					<li class = "openMenu"     >Exit</li>
 				</ul>
 			</div>
 		</div>
-		
+	</section>
+
+	<!-- Loader -->
+	<section id = "loader" class = "section">
+		<div class = "sectionHeader">
+			<ul class = "buttons">
+				<li class = "openIngame"   >Back</li>
+			</ul>
+		</div>
+		<div class = "box">
+			<h1 class = "sign">Saved Games</h1>
+			<table id = "loaderList">
+			</table>
+		</div>
+	</section>
+
+	<!-- Options -->
+	<section id = "options" class = "section">
+		<div class = "sectionHeader">
+		</div>
 	</section>
 
 	<!-- Game -->
 	<section id = "game" class = "section">
 		<div class = "sectionHeader">
 			<ul class = "buttons">
-				<li class = "openJournal">
-					Journal
-				</li>
-
-				<li class = "openMenu">
-					Back
-				</li>
+				<li class = "switchJournal">Journal</li>
+				<li class = "openIngame"   >Menu</li>
 			</ul>
 		</div>
-		<div class = "frame">
+		<div class = "box">
 			<canvas id = "window" width = "720" height = "400"></canvas>
 		</div>
 	</section>
@@ -89,24 +129,22 @@
 	<section id = "journal" class = "section">
 		<div class = "sectionHeader">
 			<ul class = "buttons">
-				<li class = "openGame">
-					Back
-				</li>
+				<li class = "openGame">Back</li>
 			</ul>
 		</div>
-		<div class = "frame">
+		<div class = "box">
 			<div id = "inventory">
-				<h1 id = "inventorySign">
-					Inventory
-				</h1>
+				<h1 class = "sign">Inventory</h1>
 
-				<table id = "list">
+				<table id = "inventoryList">
 				</table>
 			</div>
+
 			<div id = "character">
-				<h1 id = "characterSign">
-					Character
-				</h1>
+				<h1 class = "sign">Character</h1>
+
+				<table id = "characterList">
+				</table>
 			</div>
 		</div>
 	</section>
@@ -121,51 +159,15 @@
 		var 
 			canvas    = $('#window'),
 
-			interface = new Interface,
-			app       = new App,
-			storage   = new Map.Storage,
-			resources = new Resource.Storage;
+			interface = new Interface        ,
+			app       = new App              ,
+			storage   = new Maps.Storage     ,
+			resources = new Resources.Storage;
 
-		storage.load(mapset)
+		storage  .loadMeshes(mapset)
+		resources.load()
 
-		resources.load
-		({
-			textures : 
-			{
-				dirt0   : 'ress/textures/dirt0.png' ,
-				dirt1   : 'ress/textures/dirt1.png' ,
-				dirt2   : 'ress/textures/dirt2.png' ,
-				dirt3   : 'ress/textures/dirt3.png' ,
-				stone0  : 'ress/textures/stone0.png',
-				stone1  : 'ress/textures/stone1.png',
-				stone2  : 'ress/textures/stone2.png',
-				stone3  : 'ress/textures/stone3.png',
-
-				player        : 'ress/textures/player_right.png',
-				playerLeft    : 'ress/textures/player_left.png',
-				playerRun     : 'ress/textures/player_run_right.png',
-				playerRunLeft : 'ress/textures/player_run_left.png'
-			}
-		});
-
-		interface.init
-		( 
-			app, 
-		{
-			game      : '#game'   ,
-			menu      : '#menu'   ,
-			options   : '#options',
-			journal   : '#journal',
-			list      : '#list'  
-		},
-		{
-			bStartGame   : '.startGame'  ,
-			bOpenOptions : '.openOptions',
-			bOpenJournal : '.openJournal',
-			bOpenGame    : '.openGame'   ,
-			bOpenMenu    : '.openMenu'
-
-		});
+		interface.init(app);
 
 		app.init
 		({

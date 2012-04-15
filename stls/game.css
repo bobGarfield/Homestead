@@ -1,11 +1,11 @@
-#game
+section#game
 {
 	background : black;
 
 	display : none;
 }
 
-#window
+canvas#window
 {
 	width  : 750px;
 	height : 400px;

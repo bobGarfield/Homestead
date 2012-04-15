@@ -8,7 +8,7 @@ class @App
 
 		player   = new Player.Hero
 
-		@manager = new Manager
+		@manager = new Control.Manager
 			'interface' : interface
 			'textures'  : textures
 			'storage'   : storage
@@ -16,5 +16,26 @@ class @App
 			'player'    : player
 			'paper'     : paper
 
+		do localStorage.clear
+
 	start : ->
 		do @manager.start
+
+	loadState : (key) ->
+		data = JSON.parse localStorage.getItem(key)
+
+		@manager.import data
+
+	saveGame : ->
+		state = @manager.export().stringify()
+		key   = state.time
+
+		localStorage.setItem(key, state.data)
+
+	getSaves : ->
+		states = {}
+
+		for time, data of localStorage
+			states[time] = JSON.parse data
+
+		return states

@@ -1,9 +1,11 @@
-section#menu
+section#ingame
 {
+	display : none;
+
 	z-index : 1;
 }
 
-#menuList
+#ingameList
 {
 	display : block;
 
@@ -14,21 +16,21 @@ section#menu
 	font-size : 25px;
 }
 
-#menuList li
+#ingameList li
 {
 	margin-bottom : 25px;
-
+	
 	list-style-type : none;
 }
 
-#menuList li:hover
+#ingameList li:hover
 {
 	cursor : pointer;
 
 	color : lightgray;
 }
 
-#menuBackground
+#ingameBackground
 {
 	position : absolute;
 
