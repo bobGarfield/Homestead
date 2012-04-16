@@ -6,9 +6,9 @@ class @App
 		{paper, storage, canvas, interface} = opts
 		{textures} = opts.resources
 
-		player   = new Player.Hero
+		player = new Player.Hero
 
-		@manager = new Control.Manager
+		@controller = new Control.Controller
 			'interface' : interface
 			'textures'  : textures
 			'storage'   : storage
@@ -19,15 +19,15 @@ class @App
 		do localStorage.clear
 
 	start : ->
-		do @manager.start
+		do @controller.start
 
 	loadState : (key) ->
 		data = JSON.parse localStorage.getItem(key)
 
-		@manager.import data
+		@controller.import data
 
 	saveGame : ->
-		state = @manager.export().stringify()
+		state = @controller.export().stringify()
 		key   = state.time
 
 		localStorage.setItem(key, state.data)

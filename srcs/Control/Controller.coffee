@@ -23,12 +23,16 @@ makeJumpKey    = 'space'
 leftButton  = 0
 rightButton = 2
 
+## Auxiliary function
+extracter = (location) ->
+	return location.matrix
+
 namespace "Control", ->	
 	
 	## Import
 	{State} = @
 	
-	class @Manager
+	class @Controller
 
 		constructor : (@opts) ->
 			{canvas, paper} = opts
@@ -186,8 +190,6 @@ namespace "Control", ->
 
 				# Checking jump
 				if key.isDown makeJumpKey
-					
-					console.log storage.current.index
 
 					# Checking location
 					if location.checkY(player.head, -1)
@@ -242,6 +244,8 @@ namespace "Control", ->
 			@location = storage.current
 
 		## Work with state
+
+		# Export state
 		export : ->
 			{location       } = @
 			{player, storage} = @opts
@@ -249,40 +253,58 @@ namespace "Control", ->
 
 			do storage.save
 
-			state = new State
-				'location' : location
-				'player'   : player
-				'camera'   : camera
+			pdata =
+				'coord'     : player.coord
+				'container' : player.inventory.container
 
-		import : (data) ->
-			# Setting player and location state
-			{player, storage} = @opts
-			{_index, _matrix} = data.location
-			{_coord         } = data.player
+			vdata =
+				'camera'    : camera
 
-			storage.change _index
+			sdata =
+				'maps'      : storage.maps.map extracter
+				'index'     : location.index
+
+			return new State
+				'player'  : pdata
+				'view'    : vdata
+				'storage' : sdata
+
+		# Import state
+		import : (state) ->
+			pdata = state.player
+			vdata = state.view
+			sdata = state.storage
+
+			# Setting location state
+			{storage    } = @opts
+			{maps, index} = sdata
+
+			storage.maps.each (location, index) ->
+				location.matrix = maps[index]
+
+			storage.change index
 
 			do @updateLocation
-
-			@location.matrix = _matrix
-
 			do @buildLocation
 
-			point = [_coord.x, _coord.y].point()
+			# Setting player state
+			{player} = @opts
+			{coord } = pdata
+
+			point = [coord.x, coord.y].point()
 			player.spawn point
 
 			# Setting inventory state
-			{container } = player.inventory
-			{_container} = data.player
+			{container} = pdata
+			{inventory} = player
 
-			for item of _container
-				container[item] = _container[item]
+			inventory.container.set container
 
 			# Setting camera
-			{camera } = @view
-			{_camera} = data.view
+			ocamera = @view.camera
+			dcamera = vdata.camera
 
-			vector = [_camera.x-camera.x, _camera.y-camera.y].point()
+			vector = [dcamera.x-ocamera.x, dcamera.y-ocamera.y].point()
 
 			@view.translate vector
 
