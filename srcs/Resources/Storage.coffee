@@ -1,33 +1,86 @@
-textures = 
-	# Terrain
-	dirt0  : 'ress/textures/dirt0.png' ,
-	dirt1  : 'ress/textures/dirt1.png' ,
-	dirt2  : 'ress/textures/dirt2.png' ,
-	dirt3  : 'ress/textures/dirt3.png' ,
-	stone0 : 'ress/textures/stone0.png',
-	stone1 : 'ress/textures/stone1.png',
-	stone2 : 'ress/textures/stone2.png',
-	stone3 : 'ress/textures/stone3.png',
+## Paths
+texturesPath = 'ress/textures/'
+audiosPath   = 'ress/audios/'
+meshesPath   = 'ress/meshes/'
 
-	# Characters
-	player        : 'ress/textures/player_right.png'    ,
-	playerLeft    : 'ress/textures/player_left.png'     ,
-	playerRun     : 'ress/textures/player_run_right.png',
-	playerRunLeft : 'ress/textures/player_run_left.png'
+## File types
+png = '.png'
 
+## Regexp patterns
+space = /\s/
+
+## Auxiliary functions
+
+# Translate mesh to matrix
+translate = (mesh) ->
+	matrix = mesh.split space
+	matrix.each (row, index) =>
+		matrix[index] = row.split ''
+
+	return matrix
+
+# Extract matrix and make mesh
+interpret = (location) ->
+	{matrix} = location
+	copy     = matrix
+
+	matrix.each (row, index) =>
+		copy[index] = row.join ''
+
+	mesh = copy.join space
+
+	return mesh
+
+## Import
+Location = Maps.Location
 
 namespace "Resources", ->
 
 	class @Storage
 		constructor : ->
+			@textures = {}
+			@audios   = {}
+			@maps     = []
 
-		# Load images
-		load : ->
-			# Replacing strings with images
-			for name of textures
-				image     = new Image
-				image.src = textures[name]
+		## Data
+
+		# Load textures
+		loadTextures : (pack) ->
+			pack.each (alias) =>
+				src = "#{texturesPath+alias+png}"
 				
-				textures[name] = image
+				@textures[alias] = new Image
+				@textures[alias].src = src
 
-			@textures = textures
+		# Load audios
+		loadAudios : (pack) ->
+			#TODO
+
+		# Load meshes
+		loadMeshes : (pack) ->
+			pack.each (mesh, index) =>
+				matrix = translate mesh
+				
+				map = new Location(matrix, index)
+
+				@maps[index] = map
+
+			@currentLocation = @maps.first
+
+		## Locations
+
+		changeLocation : (index) ->
+			@currentLocation = @maps[index]
+
+		saveCurrentLocation : ->
+			{index} = @currentLocation
+
+			@maps[index] = @currentLocation
+
+		applyNeighborFrom : (side) ->
+			{maps } = @
+			{index} = @currentLocation
+
+			do @saveCurrentLocation
+
+			return !!maps[index+side] && @changeLocation(index+side)

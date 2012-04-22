@@ -1,19 +1,15 @@
-global ?= window
-
 ## Global
-
-# Swap two variables
-global.swap = (one, two) ->
-	temp = one
-
-	one = two
-	two = temp
+global = window
 
 # Make namespace
 global.namespace = (name, body) ->
 	space = @[name] ?= {}
 	space.namespace ?= global.namespace
 	body.call space
+
+# Make array
+global.parseArray = (object) ->
+	return Array.prototype.slice.call(object);
 
 ## Function
 
@@ -59,16 +55,16 @@ Array.both 'first',
 	set : ((val) -> @[0] = val )
 
 Array.both 'last',
-	get : (      -> return @[@length]),
-	set : ((val) -> @[@length] = val )
+	get : (      -> return @[@length-1]),
+	set : ((val) -> @[@length-1] = val )
 
 Array.both 'second',
 	get : (      -> return @[1]),
 	set : ((val) -> @[1] = val )
 
 Array.both 'penult',
-	get : (      -> return @[@length-1]),
-	set : ((val) -> @[@length-1] = val )
+	get : (      -> return @[@length-2]),
+	set : ((val) -> @[@length-2] = val )
 
 ## Dom
 

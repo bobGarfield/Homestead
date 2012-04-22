@@ -2,26 +2,24 @@ class @App
 
 	constructor : ->
 
-	init : (opts) ->
-		{paper, storage, canvas, interface} = opts
-		{textures} = opts.resources
+	init : (pack) ->
+		{paper, storage, canvas, ui} = pack
 
 		player = new Player.Hero
 
 		@controller = new Control.Controller
-			'interface' : interface
-			'textures'  : textures
-			'storage'   : storage
-			'canvas'    : canvas
-			'player'    : player
-			'paper'     : paper
+			'storage' : storage
+			'canvas'  : canvas
+			'player'  : player
+			'paper'   : paper
+			'ui'      : ui
 
 		do localStorage.clear
 
 	start : ->
 		do @controller.start
 
-	loadState : (key) ->
+	loadGame : (key) ->
 		data = JSON.parse localStorage.getItem(key)
 
 		@controller.import data

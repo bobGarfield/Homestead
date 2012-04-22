@@ -91,8 +91,6 @@ class @Interface
 			button.onclick = =>
 				do app.saveGame
 
-				#showText 'Saved'
-
 		buttons.switchJournal.each (button) =>
 			button.onclick = =>
 				open elements.journal
@@ -106,7 +104,7 @@ class @Interface
 				do @drawLoader
 
 	# Init interface
-	init : (@app, @elements, @buttons) ->
+	init : (@app) ->
 		do @importElements
 		do @bindEvents
 
@@ -161,6 +159,6 @@ class @Interface
 			item.className = savegameClass
 
 			item.onclick = -> 
-				app.loadState @id
+				app.loadGame @id
 
 			loaderList.appendChild item

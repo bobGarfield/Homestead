@@ -12,10 +12,6 @@ wood   = '3'
 door       = 'd'
 container  = 'c'
 
-## Neighbor locations
-left  = -1
-right =  1
-
 ## Functions
 
 # Interpret block type to block id
@@ -54,42 +50,42 @@ namespace "Maps", ->
 					@blocks[y][x] = null
 
 
-		checkX : (point, side) ->
-			# Here we have to use round
-			relative = point.divide(cellSize).round()
-
-			{x, y} = relative
+		checkX : (somePoints, someSide) ->
+			args   = parseArray arguments
 			
-			x += side
+			points = args.slice(0, -1)
+			side   = args.last
 
-			return @matrix[y]?[x] is hollow
+			return points.every (point) =>
+				relative = point.divide(cellSize).round()
 
-		checkY : (point, side) ->
-			relative = @relativeFrom point
+				{x, y} = relative
+				
+				x += side
 
-			{x, y} = relative
+				return @matrix[y]?[x] is hollow
+
+		checkY : (somePoints, someSide) ->
+			args   = parseArray arguments
 			
-			y += side
+			points = args.slice(0, -1)
+			side   = args.last
+			
+			return points.every (point) =>
+				relative = @relativeFrom point
 
-			return @matrix[y]?[x] is hollow
+				{x, y} = relative
+				
+				y += side
+
+				return @matrix[y]?[x] is hollow
 
 		checkBorder : (point) ->
 			relative = @relativeFrom point
 
 			{x, y} = relative
 
-			switch x
-				# Left side
-				when 0
-					return left
-
-				# Right side
-				when @width-1
-					return right
-
-				# Nothing
-				else
-					return null
+			return x is 0 or x is @width-1
 
 		# Check if x less than @width
 		checkWidth  : (x) ->
@@ -116,11 +112,10 @@ namespace "Maps", ->
 
 			do @blocks[y][x]?.remove
 
-		destroy : () ->
+		destroy : ->
 			@blocks.each (row) ->
 				row.each (block) ->
 					do block?.remove
-
 
 		# Get block id at point
 		blockAt : (point) ->
@@ -132,7 +127,7 @@ namespace "Maps", ->
 			
 			return 'null' unless type
 
-			id   = translate type
+			id = translate type
 
 			return id
 

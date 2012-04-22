@@ -23,6 +23,10 @@ makeJumpKey    = 'space'
 leftButton  = 0
 rightButton = 2
 
+## Sides
+leftSide  = -1
+rightSide =  1
+
 ## Auxiliary function
 extracter = (location) ->
 	return location.matrix
@@ -34,20 +38,23 @@ namespace "Control", ->
 	
 	class @Controller
 
-		constructor : (@opts) ->
-			{canvas, paper} = opts
+		constructor : (pack) ->
+			{@player, @storage, @ui, canvas, paper} = pack
 			
-			paper.setup   canvas
+			paper.setup canvas
 			paper.install @
 
+		## Gameplay
+
+		# Start game
 		start : ->
-			{interface, player, storage} = @opts
+			{ui, player, storage} = @
 
 			# Autoselect location
-			@location = storage.current
+			@location = storage.currentLocation
 
 			# Linking interface with player inventory container
-			interface.container = player.inventory.container
+			ui.container = player.inventory.container
 
 			do @view.resetCamera
 
@@ -57,10 +64,12 @@ namespace "Control", ->
 			do @defineMouseHandlers
 			do @defineKeyboardHandlers		
 
+		# Define keyboard handlers
 		defineKeyboardHandlers : ->
-			{interface, player, textures} = @opts
+			{ui, player} = @
+			{textures  } = @storage
 			
-			{journal} = interface.elements
+			{journal} = ui.elements
 
 			# Defining onKeyDown handlers
 			@tool.onKeyDown = (event) =>
@@ -81,8 +90,9 @@ namespace "Control", ->
 				if event.key is walkLeftKey
 					player.shape.image = textures.playerLeft
 
+		# Define mouse handlers
 		defineMouseHandlers : ->
-			{player} = @opts
+			{player} = @
 
 			# Defining onMouseDown handler
 			@tool.onMouseDown = (event) =>
@@ -121,8 +131,17 @@ namespace "Control", ->
 						
 							location.putBlockTo(point, id, shape)
 
+		# Define gameloop
+
+		# WARNING: THIS METHOD CONTAINS VIOLENCE. 21+
+		# WAARSCHUWING: DEZE METHODE BEVAT GEWELD. 21+
+		# ATTENZIONE: QUESTO METODO CONTIENE VIOLENZA. 21+
+		# ВНИМАНИЕ: ДАННЫЙ МЕТОД СОДЕРЖИТ НАСИЛИЕ. 21+
+		# ATTENTION: CETTE METHODE CONTIENT DE LA VIOLENCE. 21+
+		# 警告：此方法包含的暴力行為。21+
+
 		defineLoop : ->
-			{player, storage} = @opts
+			{storage} = @
 			
 			key = @Key
 			
@@ -131,20 +150,19 @@ namespace "Control", ->
 
 			# Defining onFrame handler
 			@view.onFrame = =>	
-				{location} = @
-				{player  } = @opts
-				{camera  } = @view
+				{location, player} = @
+				{camera          } = @view
 				
 				# Checking right
 				if key.isDown walkRightKey
 
 					# Checking location
-					if location.checkX(player.head, 0) and location.checkX(player.body, 0)
+					if location.checkX(player.head, player.body, 0)
 						player.move right
 
 						# Checking location change
-						if (side = location.checkBorder(player.body))
-							if storage.follow side
+						if location.checkBorder(player.body)
+							if storage.applyNeighborFrom rightSide
 								do @updateLocation
 								do @buildLocation
 
@@ -161,12 +179,12 @@ namespace "Control", ->
 				if key.isDown walkLeftKey
 					
 					# Checking location
-					if location.checkX(player.head, -1) and location.checkX(player.body, -1)
+					if location.checkX(player.head, player.body, -1)
 						player.move left
 
 						# Checking location change
-						if (side = location.checkBorder(player.body))
-							if storage.follow side
+						if location.checkBorder(player.body)
+							if storage.applyNeighborFrom leftSide
 								do @updateLocation
 								do @buildLocation
 
@@ -199,9 +217,13 @@ namespace "Control", ->
 						if camera.y > 0 and location.checkHeight(player.body.y+vheight/2)
 							@view.translate toUp
 
+		## Player
+
+		# Spawn player by default
 		spawnPlayer : ->
-			{player, textures} = @opts
-			{points          } = @location
+			{player  } = @
+			{points  } = @location
+			{textures} = @storage
 			
 			texture = textures.player
 			point   = points.left.clone()
@@ -210,8 +232,9 @@ namespace "Control", ->
 			
 			player.spawn point
 
+		# Respawn player from side
 		respawnPlayerFrom: (side) ->
-			{player} = @opts
+			{player} = @
 			{points} = @location
 
 			point   = points[side].clone()
@@ -219,6 +242,9 @@ namespace "Control", ->
 
 			player.spawn point
 
+		## Location
+
+		# Build location
 		buildLocation : ->
 			{location} = @
 
@@ -236,22 +262,22 @@ namespace "Control", ->
 
 						location.spawnBlockAt point, shape
 
+		# Update location
 		updateLocation : ->
-			{storage, player} = @opts
+			{storage, player} = @
 
 			do @location.destroy
 
-			@location = storage.current
+			@location = storage.currentLocation
 
-		## Work with state
+		## State
 
 		# Export state
 		export : ->
-			{location       } = @
-			{player, storage} = @opts
-			{camera         } = @view
+			{location, player, storage} = @
+			{camera                   } = @view
 
-			do storage.save
+			do storage.saveCurrentLocation
 
 			pdata =
 				'coord'     : player.coord
@@ -276,19 +302,19 @@ namespace "Control", ->
 			sdata = state.storage
 
 			# Setting location state
-			{storage    } = @opts
+			{storage    } = @
 			{maps, index} = sdata
 
 			storage.maps.each (location, index) ->
 				location.matrix = maps[index]
 
-			storage.change index
+			storage.changeLocation index
 
 			do @updateLocation
 			do @buildLocation
 
 			# Setting player state
-			{player} = @opts
+			{player} = @
 			{coord } = pdata
 
 			point = [coord.x, coord.y].point()
@@ -308,11 +334,9 @@ namespace "Control", ->
 
 			@view.translate vector
 
-		## Auxiliary methods
-		
-		# TODO: Make more abstract
+		## Graphics
 		makeBlock  : (id) ->
-			{textures} = @opts
+			{textures} = @storage
 
 			kind = all.rand()
 			

@@ -19,39 +19,44 @@
 	<link href = "stls/options.css" rel = "stylesheet"/>
 	
 	<!-- Paper.js -->
-	<script src = "libs/paper.js/paper.js"     ></script>
+	<script src = "libs/paper.js/paper.js"></script>
 
 	<!-- Utils -->
-	<script src = "comp/utils.js"              ></script>
+	<script src = "comp/utils.js"></script>
 	
 	<!-- Interface -->
-	<script src = "comp/Interface.js"          ></script>	
-
-	<!-- Resources -->
-	<script src = "comp/Resources/Storage.js"  ></script>
+	<script src = "comp/Interface.js"></script>	
 	
 	<!-- Maps -->
-	<script src = "comp/Maps/Location.js"      ></script>
-	<script src = "comp/Maps/Storage.js"       ></script>
+	<script src = "comp/Maps/Location.js"></script>
+
+	<!-- Resources -->
+	<script src = "comp/Resources/Storage.js"></script>
+	<script src = "comp/Resources/Registrator.js"></script>
 
 	<!-- Items -->
-	<script src = "comp/Items/Container.js"    ></script>	
+	<script src = "comp/Items/Container.js"></script>	
 
 	<!-- Player -->
-	<script src = "comp/Player/Inventory.js"   ></script>
-	<script src = "comp/Player/Hero.js"        ></script>
+	<script src = "comp/Player/Inventory.js"></script>
+	<script src = "comp/Player/Hero.js"></script>
 
 	<!-- Control -->
-	<script src = "comp/Control/State.js"      ></script>
-	<script src = "comp/Control/Controller.js" ></script>
+	<script src = "comp/Control/State.js"></script>
+	<script src = "comp/Control/Controller.js"></script>
 
-	<!-- General Controller -->
-	<script src = "comp/App.js"                ></script>
+	<!-- Application -->
+	<script src = "comp/App.js"></script>
 
-	<!-- Maps -->
-	<script src = "maps/verge.js"              ></script>
-	<script src = "maps/village.js"            ></script>
-	<script src = "maps/basic.js"              ></script>
+	<!-- Maps Registrator -->
+	<script src = "ress/maps/mapRegistrator.js"></script>
+
+	<!-- Maps Meshes -->
+	<script src = "ress/maps/entire.js"></script>
+	<script src = "ress/maps/forest.js"></script>
+
+	<!-- Texture Registrator -->
+	<script src = "ress/textures/textureRegistrator.js"></script>
 </head>
 
 <body>
@@ -96,7 +101,7 @@
 	<section id = "loader" class = "section">
 		<div class = "sectionHeader">
 			<ul class = "buttons">
-				<li class = "openIngame"   >Back</li>
+				<li class = "openIngame">Back</li>
 			</ul>
 		</div>
 		<div class = "box">
@@ -157,25 +162,21 @@
 	window.onload = function()
 	{
 		var 
-			canvas    = $('#window'),
+			app = new App,
+			ui  = new Interface,
+			storage = new Resources.Storage;
 
-			interface = new Interface        ,
-			app       = new App              ,
-			storage   = new Maps.Storage     ,
-			resources = new Resources.Storage;
+		storage.loadMeshes(mapRegistrator.pack);
+		storage.loadTextures(textureRegistrator.pack);
 
-		storage  .loadMeshes(mapset)
-		resources.load()
-
-		interface.init(app);
+		ui.init(app);
 
 		app.init
 		({
-			'paper'     : paper    ,
-			'canvas'    : canvas   ,
-			'storage'   : storage  ,
-			'resources' : resources,
-			'interface' : interface
+			'ui'        : ui,
+			'paper'     : paper,
+			'storage'   : storage,
+			'canvas'    : $('canvas')
 		});
 	}
 </script>

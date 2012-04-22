@@ -1,8 +1,8 @@
 # !/bin/bash
-#
+
 # Script For instant compiling
 
 mkdir -p comp
 rm -rf comp/*
 
-coffee --watch --lint -o comp/ -c srcs/
+coffee -o comp/ -wc srcs/
