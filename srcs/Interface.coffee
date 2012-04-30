@@ -1,45 +1,6 @@
-## HTML Tags
-row  = 'tr'
-body = 'body'
-
-## HTML events
-onContextMenu = 'oncontextmenu'
-
-## CSS Classes
-itemClass        = 'item'
-savegameClass    = 'savegame'
-currentItemClass = 'currentItem'
-
-## Constant interface elements
-elements =
-	# Sections
-	menu    : '#menu'
-	loader  : '#loader'
-	options : '#options'
-	game    : '#game'
-	journal : '#journal'
-	ingame  : '#ingame'
-	
-	# Other Elements
-	inventoryList : '#inventoryList'
-	loaderList    : '#loaderList'
-
-## Constant buttons
-buttons = 
-	startGame     : '.startGame'
-	saveGame      : '.saveGame'
-	switchJournal : '.switchJournal'
-	switchLoader  : '.switchLoader'
-	openOptions   : '.openOptions'
-	openGame      : '.openGame'
-	openMenu      : '.openMenu'
-	openIngame    : '.openIngame'
-
-## Auxiliary functions
-
 # Make an item in list
 makeItem = (args...) ->
-	item = make row
+	item = make 'tr'
 
 	args.each (text, index) ->
 		cell = item.insertCell index
@@ -47,23 +8,37 @@ makeItem = (args...) ->
 
 	return item
 
-
 class @Interface
 	
 	constructor : ->
-		preventDefaults($(body), onContextMenu)
 
-	importElements : ->
-		# Every interface element must single
-		for id of elements
-			elements[id] = $(elements[id])
+	init : (@app) ->
+		preventDefaults $('body'), 'oncontextmenu'
 
-		# Every button may not be single, so we must get each element
-		for type of buttons
-			buttons[type] = $$(buttons[type])
+		# Setting current section to menu section
+		@current = @elements.menu
+
+		do @bindEvents
+
+	## Agregates operations
+
+	# Link all parts
+	linkParts : (pack) ->
+		elements = {}
+		buttons  = {}
+
+		element = /#/
+		button  = /\./
+
+		pack.each (part) ->
+			elements[part.replace element, ''] = $(part)  if element.test part
+			buttons[part.replace button, '']   = $$(part) if button.test part
 
 		@elements = elements
 		@buttons  = buttons
+
+	# Link agregates
+	linkAggregates : (@aggregates) ->
 
 	bindEvents : ->
 		{buttons, elements, app} = @
@@ -81,11 +56,11 @@ class @Interface
 				button.onclick = -> open section
 
 		# Setting up special handlers
-		buttons.startGame.each (button) =>
+		buttons.launchGame.each (button) =>
 			button.onclick = =>
 				open elements.game
 
-				do app.start
+				do app.launchGame
 
 		buttons.saveGame.each (button) =>
 			button.onclick = =>
@@ -103,13 +78,13 @@ class @Interface
 
 				do @drawLoader
 
-	# Init interface
-	init : (@app) ->
-		do @importElements
-		do @bindEvents
+		buttons.stopGame.each (button) =>
+			button.onclick = =>
+				open elements.menu
 
-		# Setting current section to menu section
-		@current = @elements.menu
+				do app.stopGame
+
+		return
 		
 	# Make section current
 	open : (section) ->
@@ -124,8 +99,9 @@ class @Interface
 
 	# Draw player's journal
 	drawJournal : ->
-		{container         } = @
-		{inventoryList     } = @elements
+		{inventory    } = @aggregates
+		{inventoryList} = @elements
+		{container    } = inventory
 
 		removeItemsFrom inventoryList
 
@@ -133,13 +109,13 @@ class @Interface
 			item = makeItem(id, quantity)
 
 			item.id        = id
-			item.className = id is container.current && currentItemClass || itemClass
+			item.className = if id is inventory.current then 'currentItem' else 'item'
 
 			item.onclick = ->
 				resetClassNamesFor inventoryList.children
 
-				container.current = @id
-				@className        = currentItemClass
+				inventory.currentBlock = @id
+				@className = 'currentItem'
 
 			inventoryList.appendChild item
 
@@ -153,10 +129,10 @@ class @Interface
 		removeItemsFrom loaderList
 
 		for time of saves
-			item = makeItem(time)
+			item = makeItem time
 
 			item.id = time
-			item.className = savegameClass
+			item.className = 'savegame'
 
 			item.onclick = -> 
 				app.loadGame @id

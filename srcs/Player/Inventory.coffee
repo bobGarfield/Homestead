@@ -23,9 +23,7 @@ namespace 'Player', ->
 
 		# Return current block and decrease it's quantity
 		takeBlock : ->
-			{blocks, current} = @container
+			{blocks      } = @container
+			{currentBlock} = @
 
-			if blocks[current]
-				--blocks[current]
-				
-				return current
+			return blocks[currentBlock] and blocks[currentBlock]-- and currentBlock or null

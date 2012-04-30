@@ -8,9 +8,12 @@ namespace 'Player', ->
 	class @Hero
 		constructor : ->
 			@inventory = new Inventory
+			
+			@shape = null
+			@coord = null
 
 		spawn : (@coord) ->
-			@shape?.position = coord
+			@shape.position = coord
 
 		move : (dist) ->
 			@shape.position.x += dist
@@ -23,6 +26,14 @@ namespace 'Player', ->
 		fall : (height) ->
 			@shape.position.y += height
 			@coord.y += height
+
+		reset : ->
+			do @shape.remove
+
+			@coord     = null
+			@shape     = null
+
+			@inventory = new Inventory
 
 		@get 'head', ->
 			head    = @coord.clone()

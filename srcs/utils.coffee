@@ -66,6 +66,12 @@ Array.both 'penult',
 	get : (      -> return @[@length-2]),
 	set : ((val) -> @[@length-2] = val )
 
+Array.get 'width',  ->
+	return @first.length
+
+Array.get 'height', ->
+	return @length
+
 ## Dom
 
 # Short querySelector
@@ -105,58 +111,3 @@ HTMLCollection::each = Array::each
 global.removeItemsFrom = (table) ->
 	while table.rows.length
 		table.deleteRow 0
-
-## Array + Paper
-
-# Make point/vector from array
-Array::point = ->
-	new global.paper.Point @
-
-## Paper
-
-# Patching Project::draw for translating without artefacts
-draw = global.paper.Project::draw
-
-global.paper.Project::draw = (context, matrix) ->
-	camera = @view.camera
-	size   = @view.size
-
-	# Adding camera coordinates to zero point
-	context.clearRect(camera.x, camera.y, size.width, size.height)
-	
-	draw.call(@, context, matrix)
-
-# paper.View::scrollBy more optimised analog
-global.paper.View::translate = (point) ->
-	{x, y} = point
-
-	@_context.translate -x, -y
-	
-	@camera.x += x
-	@camera.y += y
-
-# Allias
-global.paper.View::translateTo = global.paper.View::translate
-
-global.paper.View::resetCamera = ->
-	@camera = [0, 0].point()
-
-global.paper.View::cancelTranslation = ->
-	vector = [-@camera.x, 0].point()
-
-	@translate vector
-
-global.paper.View::applyTranslation = ->
-	@translate @camera
-
-# Multiply @
-global.paper.Point::multiply = (n) ->
-	new global.paper.Point @x*n, @y*n
-
-# Divide @
-global.paper.Point::divide = (n) ->
-	new global.paper.Point @x/n, @y/n
-
-# Floor @
-global.paper.Point::floor = ->
-	new global.paper.Point @x.floor(), @y.floor()

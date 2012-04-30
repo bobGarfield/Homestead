@@ -15,11 +15,11 @@ namespace 'Items', ->
 			# 0 if undefined
 			@blocks[id] ?= 0
 
-			++@blocks[id]
+			@blocks[id]++
 
 		# Put item to items
 		putItem : (id) ->
 			# 0 if undefined
 			@items[id] ?= 0
 
-			++@items[id]
+			@items[id]++

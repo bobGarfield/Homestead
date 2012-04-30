@@ -36,38 +36,53 @@ Location = Maps.Location
 
 namespace "Resources", ->
 
+	# Singleton
 	class @Storage
 		constructor : ->
 			@textures = {}
 			@audios   = {}
 			@maps     = []
 
+			@currentLocation = null
+
 		## Data
 
 		# Load textures
 		loadTextures : (pack) ->
-			pack.each (alias) =>
+			{textures} = @
+
+			pack.each (alias) ->
 				src = "#{texturesPath+alias+png}"
 				
-				@textures[alias] = new Image
-				@textures[alias].src = src
+				textures[alias] = new Image
+				textures[alias].src = src
 
 		# Load audios
 		loadAudios : (pack) ->
 			#TODO
 
-		# Load meshes
-		loadMeshes : (pack) ->
-			pack.each (mesh, index) =>
-				matrix = translate mesh
-				
-				map = new Location(matrix, index)
-
-				@maps[index] = map
-
-			@currentLocation = @maps.first
-
 		## Locations
+		
+		# Load meshes
+		meshesPack = null
+
+		loadMeshes : (pack) ->
+			{maps} = @
+
+			meshesPack ?= pack
+
+			pack.each (mesh, index) ->
+				matrix = translate mesh
+
+				map = new Location(matrix)
+				map.index = index
+			
+				maps[index] = map
+
+			@currentLocation = maps.first
+
+		reloadMeshes : ->
+			@loadMeshes meshesPack
 
 		changeLocation : (index) ->
 			@currentLocation = @maps[index]
@@ -78,9 +93,13 @@ namespace "Resources", ->
 			@maps[index] = @currentLocation
 
 		applyNeighborFrom : (side) ->
-			{maps } = @
 			{index} = @currentLocation
+			{maps } = @
 
 			do @saveCurrentLocation
 
-			return !!maps[index+side] && @changeLocation(index+side)
+			if maps[index+side]
+				@changeLocation(index+side)
+				return true
+			else
+				return false

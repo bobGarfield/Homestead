@@ -5,20 +5,22 @@ class @App
 	init : (pack) ->
 		{paper, storage, canvas, ui} = pack
 
-		player = new Player.Hero
-
 		@controller = new Control.Controller
 			'storage' : storage
 			'canvas'  : canvas
-			'player'  : player
 			'paper'   : paper
 			'ui'      : ui
 
+		# Beta
 		do localStorage.clear
 
-	start : ->
+	launchGame : ->
 		do @controller.start
 
+	stopGame : ->
+		do @controller.stop
+
+	## Work with saves
 	loadGame : (key) ->
 		data = JSON.parse localStorage.getItem(key)
 
@@ -28,7 +30,7 @@ class @App
 		state = @controller.export().stringify()
 		key   = state.time
 
-		localStorage.setItem(key, state.data)
+		localStorage.setItem key, state.data
 
 	getSaves : ->
 		states = {}

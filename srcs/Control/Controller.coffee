@@ -15,7 +15,7 @@ toDown  = [0,  down].point()
 
 ## Keyboard keys
 walkLeftKey    = 'a'
-walkRightKey   = 'd'
+walkKey        = 'd'
 openJournalKey = 'j'
 makeJumpKey    = 'space'
 
@@ -27,90 +27,124 @@ rightButton = 2
 leftSide  = -1
 rightSide =  1
 
-## Auxiliary function
-extracter = (location) ->
-	return location.matrix
-
-namespace "Control", ->	
+namespace "Control", ->
 	
 	## Import
 	{State} = @
+	{Hero } = Player
 	
 	class @Controller
 
 		constructor : (pack) ->
-			{@player, @storage, @ui, canvas, paper} = pack
-			
-			paper.setup canvas
-			paper.install @
+			{@storage, @ui, @canvas, @paper} = pack
 
-		## Gameplay
+		## Process control
 
-		# Start game
 		start : ->
-			{ui, player, storage} = @
+			{ui, player, storage, paper, canvas} = @
 
-			# Autoselect location
+			paper.setup canvas
+
+			@player   = new Hero
 			@location = storage.currentLocation
 
-			# Linking interface with player inventory container
-			ui.container = player.inventory.container
-
-			do @view.resetCamera
+			# Contact with ui
+			@ui.linkAggregates
+				'inventory' : @player.inventory
 
 			do @buildLocation
 			do @spawnPlayer
-			do @defineLoop
-			do @defineMouseHandlers
-			do @defineKeyboardHandlers		
+			do @initCamera
+			do @defineHandlers
+
+		stop : ->
+			do @deleteLocation
+			do @deleteCamera
+			do @deletePlayer
+			do @revertStorage
+
+			do @paper.project.remove
+
+		## Camera
+		
+		# Init Camera
+		initCamera : ->
+			do @paper.initCamera
+
+		# Delete Camera
+		deleteCamera : ->
+			do @paper.resetCamera
+
+		## Handlers
+
+		defineHandlers : ->
+			do @defineLoopHandler
+			do @defineAnimationHandler
+			do @defineMouseHandler
 
 		# Define keyboard handlers
-		defineKeyboardHandlers : ->
-			{ui, player} = @
-			{textures  } = @storage
-			
-			{journal} = ui.elements
+		defineAnimationHandler : ->
+			{textures     } = @storage
+			{paper, player} = @
 
-			# Defining onKeyDown handlers
-			@tool.onKeyDown = (event) =>
-				# Texture handle
-				if event.key is walkRightKey
-					player.shape.image = textures.playerRun
+			key = @paper.Key
 
-				if event.key is walkLeftKey
-					player.shape.image = textures.playerRunLeft
+			runSprites = [
+				textures.playerRun0,
+				textures.playerRun1,
+				textures.playerRun2,
+				textures.playerRun3,
+				textures.playerRun4,
+				textures.playerRun5
+			]
 
-			# Defining onKeyUp handlers
-			@tool.onKeyUp = (event) =>
+			runLeftSprites = [
+				textures.playerRunLeft0,
+				textures.playerRunLeft1,
+				textures.playerRunLeft2,
+				textures.playerRunLeft3,
+				textures.playerRunLeft4,
+				textures.playerRunLeft5
+			]
+
+			run     = new @paper.SpriteAnimation player.shape, runSprites
+			runLeft = new @paper.SpriteAnimation player.shape, runLeftSprites
+
+			paper.view.onFrame = ->
+				if key.isDown walkKey
+					do run.request
 				
-				# Texture handle
-				if event.key is walkRightKey
+				else if key.isDown walkLeftKey
+					do runLeft.request
+
+			paper.tool.onKeyUp = (event) ->
+				if event.key is walkKey
+					do run.cancel
+
 					player.shape.image = textures.player
 
 				if event.key is walkLeftKey
+					do runLeft.cancel
+
 					player.shape.image = textures.playerLeft
 
 		# Define mouse handlers
-		defineMouseHandlers : ->
-			{player} = @
-
+		defineMouseHandler : ->
+			{paper} = @
+			
 			# Defining onMouseDown handler
-			@tool.onMouseDown = (event) =>
-				{location} = @
+			@paper.tool.onMouseDown = (event) =>
+				{location } = @
+				{inventory} = @player
+				{camera   } = paper.view
 
-				cx = @view.camera.x
-				cy = @view.camera.y
-
-				point = event.point.clone()
+				point = event.point.add camera.point
 				
 				# Adjusting for camera and whole cell
-				point.x += cx - location.cellSize/4
-				point.y += cy
+				point.x -= Maps.qcellSize
 
 				# Thanks to motherfucking paper.js for this
 				{button} = event.event
-
-				inventory = player.inventory
 
 				switch button
 					# Harm block (by left mouse button)
@@ -123,86 +157,78 @@ namespace "Control", ->
 					
 					# Put block (by right mouse button)
 					when rightButton
+						id    = inventory.takeBlock()
 						
-						# Checking overlap
-						unless location.blockAt point
-							id    = inventory.takeBlock()
-							shape = @makeBlock(id)
+						shape = @makeBlock id
 						
-							location.putBlockTo(point, id, shape)
+						location.putBlock point, id, shape
 
 		# Define gameloop
+		defineLoopHandler : ->
+			{storage, paper, player} = @
+			{camera                } = paper.view
+			{width, height         } = camera
 
-		# WARNING: THIS METHOD CONTAINS VIOLENCE. 21+
-		# WAARSCHUWING: DEZE METHODE BEVAT GEWELD. 21+
-		# ATTENZIONE: QUESTO METODO CONTIENE VIOLENZA. 21+
-		# ВНИМАНИЕ: ДАННЫЙ МЕТОД СОДЕРЖИТ НАСИЛИЕ. 21+
-		# ATTENTION: CETTE METHODE CONTIENT DE LA VIOLENCE. 21+
-		# 警告：此方法包含的暴力行為。21+
-
-		defineLoop : ->
-			{storage} = @
-			
-			key = @Key
-			
-			vwidth  = @view.size.width
-			vheight = @view.size.height
+			key = @paper.Key
 
 			# Defining onFrame handler
-			@view.onFrame = =>	
-				{location, player} = @
-				{camera          } = @view
+			paper.view.onFrame = =>
+				{location} = @
+
+				cx = camera.point.x
+				cy = camera.point.y
 				
-				# Checking right
-				if key.isDown walkRightKey
+				# Checking right side
+				if key.isDown walkKey
 
 					# Checking location
-					if location.checkX(player.head, player.body, 0)
+					if location.checkX player.head, player.body, 0
 						player.move right
 
 						# Checking location change
-						if location.checkBorder(player.body)
+						if location.checkBorder player.body, 'right'
 							if storage.applyNeighborFrom rightSide
-								do @updateLocation
-								do @buildLocation
+								do @rebuildLocation
 
 								@respawnPlayerFrom 'left'
 
-								do @view.cancelTranslation
+								toTarget = location.points.end.negate()
+
+								camera.translate toTarget
 
 						# Checking camera
-						if location.checkWidth(camera.x+vwidth) and player.body.x > vwidth/2	
-
-							@view.translate toRight
+						if player.body.x > width/2 and location.checkWidth cx+width
+							camera.translate toRight
 
 				# Checking left
 				if key.isDown walkLeftKey
 					
 					# Checking location
-					if location.checkX(player.head, player.body, -1)
+					if location.checkX player.head, player.body, -1
 						player.move left
 
 						# Checking location change
-						if location.checkBorder(player.body)
+						if location.checkBorder player.body, 'left'
 							if storage.applyNeighborFrom leftSide
-								do @updateLocation
-								do @buildLocation
+								do @rebuildLocation
 
 								@respawnPlayerFrom 'right'
 
-								@view.translate location.points.end
+								toTarget = location.points.end
+
+								camera.translate toTarget
 
 						# Checking camera
-						if camera.x > 0 and location.checkWidth(player.body.x+vwidth/2)
-							@view.translate toLeft
+						if cx > 0 and location.checkWidth player.body.x+width/2
+							camera.translate toLeft
 
 				# Checking gravity
-				if location.checkY(player.body, 1)
+				if location.checkY player.body, 1
 					player.fall down
 
 					# Checking camera
-					if location.checkHeight(camera.y+vheight) and player.body.y > vheight/2
-						@view.translate toDown
+					if location.checkHeight(cy+height) and player.body.y > height/2
+						camera.translate toDown
 
 					return
 
@@ -210,12 +236,12 @@ namespace "Control", ->
 				if key.isDown makeJumpKey
 
 					# Checking location
-					if location.checkY(player.head, -1)
+					if location.checkY player.head, -1
 						player.jump up
 
 						# Checking camera
-						if camera.y > 0 and location.checkHeight(player.body.y+vheight/2)
-							@view.translate toUp
+						if cy > 0 and location.checkHeight player.body.y+height/2
+							camera.translate toUp
 
 		## Player
 
@@ -228,9 +254,12 @@ namespace "Control", ->
 			texture = textures.player
 			point   = points.left.clone()
 			
-			player.shape = new @Raster texture
+			player.shape = new @paper.Raster texture
 			
 			player.spawn point
+
+		deletePlayer : ->
+			@player = null
 
 		# Respawn player from side
 		respawnPlayerFrom: (side) ->
@@ -246,36 +275,54 @@ namespace "Control", ->
 
 		# Build location
 		buildLocation : ->
-			{location} = @
-
-			height = location.height
-			width  = location.width
+			{location     } = @
+			{width, height} = location
 
 			height.times (y) =>
 				width.times (x) =>
 					relative = [x, y].point()
-					point    = location.absoluteFrom relative
-
+					point    = Maps.absoluteFrom relative
+					
 					# If there must be block
 					if id = location.blockAt point
 						shape = @makeBlock id
 
-						location.spawnBlockAt point, shape
+						location.spawnBlock point, shape
 
 		# Update location
 		updateLocation : ->
-			{storage, player} = @
+			@location = @storage.currentLocation
 
-			do @location.destroy
+		# Destroy location
+		destroyLocation : ->
+			do @location?.destroy
 
-			@location = storage.currentLocation
+		rebuildLocation : ->
+			do @destroyLocation
+			do @updateLocation
+			do @buildLocation
+
+		deleteLocation : ->
+			@location = null
+
+		makeBlock : (id) ->
+			return null unless id
+
+			{textures} = @storage
+			
+			texture = textures["#{id+all.rand()}"]
+
+			return new @paper.Raster texture
 
 		## State
 
 		# Export state
 		export : ->
 			{location, player, storage} = @
-			{camera                   } = @view
+			{camera                   } = @paper.view
+
+			extracter = (location) ->
+				return location.matrix
 
 			do storage.saveCurrentLocation
 
@@ -284,7 +331,7 @@ namespace "Control", ->
 				'container' : player.inventory.container
 
 			vdata =
-				'camera'    : camera
+				'point'    : camera.point
 
 			sdata =
 				'maps'      : storage.maps.map extracter
@@ -297,6 +344,8 @@ namespace "Control", ->
 
 		# Import state
 		import : (state) ->
+			{paper} = @
+
 			pdata = state.player
 			vdata = state.view
 			sdata = state.storage
@@ -310,14 +359,13 @@ namespace "Control", ->
 
 			storage.changeLocation index
 
-			do @updateLocation
-			do @buildLocation
+			do @rebuildLocation
 
 			# Setting player state
 			{player} = @
 			{coord } = pdata
 
-			point = [coord.x, coord.y].point()
+			point = new paper.Point coord
 			player.spawn point
 
 			# Setting inventory state
@@ -327,25 +375,17 @@ namespace "Control", ->
 			inventory.container.set container
 
 			# Setting camera
-			ocamera = @view.camera
-			dcamera = vdata.camera
+			{camera} = paper.view
 
-			vector = [dcamera.x-ocamera.x, dcamera.y-ocamera.y].point()
+			opoint = new paper.Point camera.point
+			dpoint = new paper.Point vdata .point
 
-			@view.translate vector
+			vector = dpoint.subtract opoint
 
-		## Graphics
-		makeBlock  : (id) ->
-			{textures} = @storage
+			camera.translate vector
 
-			kind = all.rand()
-			
-			switch id
-				when 'dirt'
-					texture = textures["dirt#{kind}"]
-					return new @Raster texture
-				when 'stone'
-					texture = textures["stone#{kind}"]
-					return new @Raster texture
-				else
-					return null
+		## Storage
+
+		# Roll back storage data
+		revertStorage : ->
+			do @storage.reloadMeshes

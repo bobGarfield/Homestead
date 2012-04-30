@@ -5,8 +5,7 @@
 
 	<meta charset = "utf-8"></meta>
 
-	<!-- Beta Icon -->
-	<link href = "http://png-2.findicons.com/files//icons/719/crystal_clear_actions/64/gohome.png" rel = "icon"/>
+	<link href = "http://s14.postimage.org/pf4cy3on1/player_Run4.png" rel = "icon"/>
 
 	<!-- Style -->
 	<link href = "stls/fonts.css"   rel = "stylesheet"/>
@@ -21,13 +20,15 @@
 	<!-- Paper.js -->
 	<script src = "libs/paper.js/paper.js"></script>
 
-	<!-- Utils -->
+	<!-- Utils and Extensions -->
 	<script src = "comp/utils.js"></script>
-	
+	<script src = "comp/extensions.js"></script>
+
 	<!-- Interface -->
 	<script src = "comp/Interface.js"></script>	
 	
 	<!-- Maps -->
+	<script src = "comp/Maps/auxiliary.js"></script>
 	<script src = "comp/Maps/Location.js"></script>
 
 	<!-- Resources -->
@@ -48,15 +49,14 @@
 	<!-- Application -->
 	<script src = "comp/App.js"></script>
 
-	<!-- Maps Registrator -->
-	<script src = "ress/maps/mapRegistrator.js"></script>
+	<!-- Data  -->
+	<script src = "data/maplist.js"></script>
+	<script src = "data/partlist.js"></script>
+	<script src = "data/texturelist.js"></script>
 
 	<!-- Maps Meshes -->
 	<script src = "ress/maps/entire.js"></script>
 	<script src = "ress/maps/forest.js"></script>
-
-	<!-- Texture Registrator -->
-	<script src = "ress/textures/textureRegistrator.js"></script>
 </head>
 
 <body>
@@ -71,8 +71,7 @@
 		<div id = "menuBackground">
 			<div class = "box">
 				<ul id = "menuList">
-					<li class = "startGame"    >Start Game</li>
-					<li class = "switchLoader" >Load Game</li>
+					<li class = "launchGame"   >Start Game</li>
 					<li class = "openOptions"  >Options</li>
 					<li class = "openAbout"    >About</li>
 				</ul>
@@ -91,7 +90,7 @@
 					<li class = "switchLoader" >Load Game</li>
 					<li class = "saveGame"     >Save Game</li>
 					<li class = "openOptions"  >Options</li>
-					<li class = "openMenu"     >Exit</li>
+					<li class = "stopGame"     >Exit</li>
 				</ul>
 			</div>
 		</div>
@@ -161,10 +160,12 @@
 <script>	
 	window.onload = function()
 	{
-		var 
-			app = new App,
-			ui  = new Interface,
+		var
+			app     = new App,
+			ui      = new Interface,
 			storage = new Resources.Storage;
+
+		ui.linkParts(partRegistrator.pack);
 
 		storage.loadMeshes(mapRegistrator.pack);
 		storage.loadTextures(textureRegistrator.pack);

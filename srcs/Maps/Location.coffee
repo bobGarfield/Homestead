@@ -1,59 +1,40 @@
-## Constants
-cellSize  = 40         #[px]
-hcellSize = cellSize/2 #[px]
-
-## Blocks
-hollow = '0'
-dirt   = '1'
-stone  = '2'
-wood   = '3'
-
-## Items
-door       = 'd'
-container  = 'c'
-
-## Functions
-
-# Interpret block type to block id
-translate = (type) ->
-	switch type
-		when dirt   then 'dirt'
-		when stone  then 'stone'
-		when wood   then 'wood'
-		else null
-
-# Translate block id to block type
-interpret = (id) ->
-	switch id
-		when 'dirt'   then dirt
-		when 'stone'  then stone
-		when 'wood'   then wood
-		else null
-
 namespace "Maps", ->
 
+	## Functions import
+	{absoluteFrom, relativeFrom, translate, interpret} = @
+
+	## Constants import
+	{cellSize, hcellSize, qcellSize} = @
+
+	## Materials import
+	{hollow, dirt, stone} = @
+
 	class @Location
-		constructor : (@matrix, @index) ->
-			@points = {}
+		constructor : (@matrix) ->
+			{width, height} = @
 
-			@points.left  = @absoluteFrom([3,         3].point())
-			@points.right = @absoluteFrom([@width-4,  3].point())
-			@points.end   = @absoluteFrom([@width-20, 0].point())
-
-			@cellSize = cellSize
-			@blocks   = []
+			@points =
+				left  : absoluteFrom([3,         3].point())
+				right : absoluteFrom([@width-4,  3].point())
+				end   : absoluteFrom([@width-20, 0].point())
 
 			# Filling @blocks
-			@height.times (y) =>
-				@blocks[y] = []
-				@width.times (x) =>
-					@blocks[y][x] = null
+			blocks = []
+			
+			height.times (y) ->
+				blocks[y] = []
+				width.times (x) ->
+					blocks[y][x] = null
 
+			@blocks = blocks
+
+		## Checks
 
 		checkX : (somePoints, someSide) ->
+			# Multipoints support
 			args   = parseArray arguments
 			
-			points = args.slice(0, -1)
+			points = args.slice 0, -1
 			side   = args.last
 
 			return points.every (point) =>
@@ -66,13 +47,14 @@ namespace "Maps", ->
 				return @matrix[y]?[x] is hollow
 
 		checkY : (somePoints, someSide) ->
+			# Multipoints support
 			args   = parseArray arguments
 			
 			points = args.slice(0, -1)
 			side   = args.last
 			
 			return points.every (point) =>
-				relative = @relativeFrom point
+				relative = relativeFrom point
 
 				{x, y} = relative
 				
@@ -80,12 +62,12 @@ namespace "Maps", ->
 
 				return @matrix[y]?[x] is hollow
 
-		checkBorder : (point) ->
-			relative = @relativeFrom point
+		checkBorder : (point, side) ->
+			relative = relativeFrom point
 
-			{x, y} = relative
+			{x} = relative
 
-			return x is 0 or x is @width-1
+			return side is 'left' and x is 0 or side is 'right' and x is @width-1
 
 		# Check if x less than @width
 		checkWidth  : (x) ->
@@ -99,12 +81,17 @@ namespace "Maps", ->
 
 			return y < @height
 
+		## Content modifing
+
+		# Destroy whole location
+		destroy : ->
+			@blocks.each (row) ->
+				row.each (block) ->
+					do block?.remove
+
 		# Destroy block at point
 		destroyBlockAt : (point) ->
-			# Adjusting for one cell
-			point = point.add(-cellSize/4)
-
-			relative = @relativeFrom point
+			relative = relativeFrom point
 
 			{x, y} = relative
 
@@ -112,67 +99,47 @@ namespace "Maps", ->
 
 			do @blocks[y][x]?.remove
 
-		destroy : ->
-			@blocks.each (row) ->
-				row.each (block) ->
-					do block?.remove
-
 		# Get block id at point
 		blockAt : (point) ->
-			relative = @relativeFrom point
+			relative = relativeFrom point
 
 			{x, y} = relative
 
 			type = @matrix[y]?[x]
-			
-			return 'null' unless type
 
 			id = translate type
 
 			return id
 
 		# Put block to point
-		putBlockTo  : (point, id, shape) ->		
-			return unless shape
+		putBlock  : (point, id, shape) ->
+			return unless id or shape
 
 			type     = interpret id
-			relative = @relativeFrom point
+			relative = relativeFrom point
 
 			# Adding, because it is center point
-			shape.position = @absoluteFrom(relative).add(hcellSize)
+			shape.position = absoluteFrom(relative).add hcellSize
 
 			{x, y} = relative
 
-			@matrix[y][x] = type
 			@blocks[y][x] = shape
+			@matrix[y][x] = type
 
 		# Spawn existing block
-		spawnBlockAt : (point, shape) ->
-			relative = @relativeFrom point
+		spawnBlock : (point, shape) ->
+			relative = relativeFrom point
 
 			# Adding, because it is center point
-			shape.position = @absoluteFrom(relative).add(hcellSize)
+			shape.position = absoluteFrom(relative).add hcellSize
 
 			{x, y} = relative
 
 			@blocks[y][x] = shape
 
-		## Map-depending methods
-
-		# Get relative coordinates from absolute coordinates
-		relativeFrom : (absolute) ->
-			absolute.divide(cellSize).floor()
-
-		# Get absolute coordinates from absolute coordinates
-		absoluteFrom : (relative) ->
-			relative.multiply(cellSize)
-
-		# Get absolute from relative coordinates
-		floorFrom    : (absolute) ->
-			@absoluteFrom absolute.divide(cellSize).floor()
-
+		## Accessors
 		@get 'height', ->
-			@height_ ?= @matrix.length
+			@height_ ?= @matrix.height
 
 		@get 'width',  ->
-			@width_  ?= @matrix[0].length
+			@width_  ?= @matrix.width
