@@ -1,24 +1,46 @@
-# Make an item in list
-makeItem = (args...) ->
-	item = make 'tr'
-
-	args.each (text, index) ->
-		cell = item.insertCell index
-		cell.textContent = text
-
-	return item
-
+# Singleton
 class @Interface
+
+	## Private
+	b = null
+	a = null
+
+	makeItem = (args...) ->
+		item = make 'tr'
+
+		args.each (text, index) ->
+			cell = item.insertCell index
+			cell.textContent = text
+
+		return item
 	
 	constructor : ->
+		b = $ 'body'
 
-	init : (@app) ->
-		preventDefaults $('body'), 'oncontextmenu'
+	init : (app) ->
+		a = app
+
+		@showMessage 'Now more interactive!'
+
+		preventDefaults b, 'oncontextmenu'
 
 		# Setting current section to menu section
 		@current = @elements.menu
 
 		do @bindEvents
+
+	## Interactive
+
+	# Show text message
+	showMessage : (text) ->
+		message = make 'div'
+
+		message.className   = 'message'
+		message.textContent = text
+
+		message.onclick = -> b.removeChild @
+
+		b.appendChild message
 
 	## Agregates operations
 
@@ -41,7 +63,7 @@ class @Interface
 	linkAggregates : (@aggregates) ->
 
 	bindEvents : ->
-		{buttons, elements, app} = @
+		{buttons, elements} = @
 
 		open   = @open.bind @
 		prefix = /(open)/g
@@ -56,15 +78,16 @@ class @Interface
 				button.onclick = -> open section
 
 		# Setting up special handlers
+
 		buttons.launchGame.each (button) =>
 			button.onclick = =>
 				open elements.game
 
-				do app.launchGame
+				do a.launchGame
 
 		buttons.saveGame.each (button) =>
 			button.onclick = =>
-				do app.saveGame
+				do a.saveGame
 
 		buttons.switchJournal.each (button) =>
 			button.onclick = =>
@@ -82,7 +105,7 @@ class @Interface
 			button.onclick = =>
 				open elements.menu
 
-				do app.stopGame
+				do a.stopGame
 
 		return
 		
@@ -121,10 +144,9 @@ class @Interface
 
 	# Draw App's loader
 	drawLoader : ->
-		{app       } = @
 		{loaderList} = @elements
 
-		saves = app.getSaves()
+		saves = a.getSaves()
 
 		removeItemsFrom loaderList
 
@@ -135,6 +157,6 @@ class @Interface
 			item.className = 'savegame'
 
 			item.onclick = -> 
-				app.loadGame @id
+				a.loadGame @id
 
 			loaderList.appendChild item

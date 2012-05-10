@@ -5,32 +5,23 @@ class @App
 	init : (pack) ->
 		{paper, storage, canvas, ui} = pack
 
-		@controller = new Control.Controller
+		@controller = new GeneralController
 			'storage' : storage
 			'canvas'  : canvas
 			'paper'   : paper
 			'ui'      : ui
 
-		# Beta
-		do localStorage.clear
-
 	launchGame : ->
-		do @controller.start
+		do @controller.init
 
 	stopGame : ->
 		do @controller.stop
 
-	## Work with saves
 	loadGame : (key) ->
-		data = JSON.parse localStorage.getItem(key)
-
-		@controller.import data
+		@controller.load key
 
 	saveGame : ->
-		state = @controller.export().stringify()
-		key   = state.time
-
-		localStorage.setItem key, state.data
+		do @controller.save
 
 	getSaves : ->
 		states = {}

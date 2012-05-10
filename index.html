@@ -1,60 +1,51 @@
 <!DOCTYPE html>
-<html>
 <head>
 	<title>Homestead</title>
 
-	<meta charset = "utf-8"></meta>
+	<meta charset = "utf-8">
 
 	<link href = "http://s14.postimage.org/pf4cy3on1/player_Run4.png" rel = "icon"/>
 
-	<!-- Style -->
-	<link href = "stls/fonts.css"   rel = "stylesheet"/>
-	<link href = "stls/basic.css"   rel = "stylesheet"/>
-	<link href = "stls/menu.css"    rel = "stylesheet"/>
-	<link href = "stls/game.css"    rel = "stylesheet"/>
-	<link href = "stls/ingame.css"  rel = "stylesheet"/>
-	<link href = "stls/journal.css" rel = "stylesheet"/>
-	<link href = "stls/loader.css"  rel = "stylesheet"/>
-	<link href = "stls/options.css" rel = "stylesheet"/>
-	
-	<!-- Paper.js -->
+	<link href = "stls/fonts.css"     rel = "stylesheet"/>
+	<link href = "stls/animation.css" rel = "stylesheet"/>
+	<link href = "stls/basic.css"     rel = "stylesheet"/>
+
+	<link href = "stls/menu.css"      rel = "stylesheet"/>
+	<link href = "stls/game.css"      rel = "stylesheet"/>
+	<link href = "stls/ingame.css"    rel = "stylesheet"/>
+	<link href = "stls/journal.css"   rel = "stylesheet"/>
+	<link href = "stls/loader.css"    rel = "stylesheet"/>
+	<link href = "stls/options.css"   rel = "stylesheet"/>
+
 	<script src = "libs/paper.js/paper.js"></script>
 
-	<!-- Utils and Extensions -->
 	<script src = "comp/utils.js"></script>
 	<script src = "comp/extensions.js"></script>
 
-	<!-- Interface -->
-	<script src = "comp/Interface.js"></script>	
-	
-	<!-- Maps -->
-	<script src = "comp/Maps/auxiliary.js"></script>
-	<script src = "comp/Maps/Location.js"></script>
+	<script src = "comp/dynamics.js"></script>
 
-	<!-- Resources -->
-	<script src = "comp/Resources/Storage.js"></script>
-	<script src = "comp/Resources/Registrator.js"></script>
-
-	<!-- Items -->
-	<script src = "comp/Items/Container.js"></script>	
-
-	<!-- Player -->
-	<script src = "comp/Player/Inventory.js"></script>
-	<script src = "comp/Player/Hero.js"></script>
-
-	<!-- Control -->
-	<script src = "comp/Control/State.js"></script>
-	<script src = "comp/Control/Controller.js"></script>
-
-	<!-- Application -->
+	<script src = "comp/Interface.js"></script>
+	<script src = "comp/Mesh.js"></script>
+	<script src = "comp/Map.js"></script>
+	<script src = "comp/Storage.js"></script>
+	<script src = "comp/Registrator.js"></script>
+	<script src = "comp/Inventory.js"></script>
+	<script src = "comp/Player.js"></script>
+	<script src = "comp/State.js"></script>
 	<script src = "comp/App.js"></script>
 
-	<!-- Data  -->
-	<script src = "data/maplist.js"></script>
+	<script src = "comp/AnimationManager.js"></script>
+	<script src = "comp/ShapeManager.js"></script>
+	<script src = "comp/EventManager.js"></script>
+	<script src = "comp/SaveManager.js"></script>
+	<script src = "comp/MapManager.js"></script>
+
+	<script src = "comp/GeneralController.js"></script>
+
+	<script src = "data/meshlist.js"></script>
 	<script src = "data/partlist.js"></script>
 	<script src = "data/texturelist.js"></script>
 
-	<!-- Maps Meshes -->
 	<script src = "ress/maps/entire.js"></script>
 	<script src = "ress/maps/forest.js"></script>
 </head>
@@ -160,14 +151,18 @@
 <script>	
 	window.onload = function()
 	{
-		var
-			app     = new App,
-			ui      = new Interface,
-			storage = new Resources.Storage;
+		var	app = new App;
+		var ui  = new Interface;
+		
+		var storage = new Storage({
+			'texturesPath' : 'ress/textures/',
+			'meshesPath'   : 'ress/meshes/',
+			'audiosPath'   : 'ress/audios/',
+		});
 
 		ui.linkParts(partRegistrator.pack);
 
-		storage.loadMeshes(mapRegistrator.pack);
+		storage.loadMeshes(meshRegistrator.pack);
 		storage.loadTextures(textureRegistrator.pack);
 
 		ui.init(app);
@@ -181,4 +176,3 @@
 		});
 	}
 </script>
-</html>

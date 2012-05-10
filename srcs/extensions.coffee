@@ -17,10 +17,9 @@ Array::point = ->
 draw = Project::draw
 
 Project::draw = (context, matrix) ->
-	{width, height, point} = @view.camera
+	{width, height, box} = @view.camera
 
-	# Adding camera coordinates to zero point
-	context.clearRect(point.x, point.y, width, height)
+	context.clearRect(box.x, box.y, width, height)
 	
 	draw.call(@, context, matrix)
 
@@ -60,29 +59,43 @@ class PaperScope::SpriteAnimation
 PaperScope::initCamera  = ->
 	@view.camera = new @Camera @view._context
 
-PaperScope::resetCamera = ->
-	do @view.camera.revert
-
-	@view.camera = null
-
 class PaperScope::Camera
 
-	constructor : (ctx) ->
+	## Private
+	context = null
+
+	## Public
+	constructor : (@ctx) ->
 		{@height, @width} = ctx.canvas
 
-		@context = ctx
+		@point = [@width/2, @height/2].point()
 
-		do @reset
+	observe : (point) ->
+		{width, height} = @
+
+		p = point.clone()
+
+		p.x = width/2  if p.x < width/2
+		p.y = height/2 if p.y < height/2
+
+		vector = p.subtract @point
+
+		@translate vector
 
 	reset : ->
-		@point = [0, 0].point()
-
-	revert : ->
-		@translate @point.negate()
+		@translate @box.negate()
 
 	translate : (vector) ->
 		{x, y} = vector
 
-		@context.translate -x, -y
+		@ctx.translate -x, -y
 
 		@point = @point.add vector
+
+	@get "box", ->
+		p = @point.clone()
+
+		p.x -= @width/2
+		p.y -= @height/2
+
+		return p

@@ -1,0 +1,38 @@
+@-webkit-keyframes slide
+{
+	from
+	{
+		top : -100px;
+	}
+
+	to
+	{
+		top : 85px;
+	}
+}
+
+@-moz-keyframes slide
+{
+	from
+	{
+		top : 50%;
+	}
+
+	to
+	{
+		top : 85px;
+	}
+}
+
+@keyframes slide
+{
+	from
+	{
+		top : 50%;
+	}
+
+	to
+	{
+		top : 85px;
+	}
+}

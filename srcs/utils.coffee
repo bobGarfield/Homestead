@@ -7,10 +7,6 @@ global.namespace = (name, body) ->
 	space.namespace ?= global.namespace
 	body.call space
 
-# Make array
-global.parseArray = (object) ->
-	return Array.prototype.slice.call(object);
-
 ## Function
 
 # Define setter
@@ -71,6 +67,9 @@ Array.get 'width',  ->
 
 Array.get 'height', ->
 	return @length
+
+Array::rand = ->
+	return @[@length.rand()]
 
 ## Dom
 

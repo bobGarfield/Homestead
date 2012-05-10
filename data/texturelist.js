@@ -1,4 +1,4 @@
-var textureRegistrator = new Resources.Registrator
+var textureRegistrator = new Registrator;
 
 textureRegistrator.register
 (
@@ -28,4 +28,4 @@ textureRegistrator.register
 	'playerRunLeft3',
 	'playerRunLeft4',
 	'playerRunLeft5'
-)
+);

@@ -1,1 +1,0 @@
-var mapRegistrator = new Resources.Registrator

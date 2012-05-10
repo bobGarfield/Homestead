@@ -1,4 +1,4 @@
-var partRegistrator = new Resources.Registrator
+var partRegistrator = new Registrator
 
 partRegistrator.register
 (

@@ -1,0 +1,1 @@
+var meshRegistrator = new Registrator
