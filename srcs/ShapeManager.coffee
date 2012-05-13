@@ -22,5 +22,13 @@ class @ShapeManager
 
 		return new p.Raster texture
 
+	makeRay : (color, from, to) ->
+		ray = new p.Path.Line from, to
+		ray.strokeColor = color
+
+		setTimeout (=> ray.remove()), 25
+
+
+
 
 

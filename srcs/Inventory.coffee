@@ -1,13 +1,13 @@
-## Auxiliary regexp patterns
 block = /(dirt|stone|wood)/
 
 class @Inventory
 
 	constructor : ->
 		@container = new Container
-		@current   = null
 
-	# Allocate and put item
+		@currentBlock = null
+		@currentItem  = null
+
 	put : (id) ->
 		return unless id
 
@@ -16,9 +16,13 @@ class @Inventory
 		else
 			@container.putItem  id
 
-	# Return current block and decrease it's quantity
 	takeBlock : ->
 		{blocks      } = @container
 		{currentBlock} = @
 
 		return blocks[currentBlock] and blocks[currentBlock]-- and currentBlock or null
+
+	takeWeapon : (id) ->
+		{items} = @container
+
+		@currentItem = items[id] or null

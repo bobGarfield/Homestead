@@ -1,9 +1,43 @@
 class @App
 
 	constructor : ->
+		ui = new Interface
+			sections :
+				menu    : '#menu'
+				loader  : '#loader'
+				options : '#options'
+				game    : '#game'
+				journal : '#journal'
+				ingame  : '#ingame'
 
-	init : (pack) ->
-		{paper, storage, canvas, ui} = pack
+			buttons :
+				launchGame : '.launchGame'
+				stopGame   : '.stopGame'
+				saveGame   : '.saveGame'
+
+				switchJournal : '.switchJournal'
+				switchGame    : '.switchGame'
+				switchIngame  : '.switchIngame'
+				switchLoader  : '.switchLoader'
+				switchOptions : '.switchOptions'
+				switchMenu    : '.switchMenu'
+
+			lists :
+				blockList : '#blockList'
+				itemList  : '#itemList'
+				saveList  : '#saveList'
+
+		storage = new Storage
+			texturesPath : 'ress/textures/'
+			meshesPath   : 'ress/meshes/'
+			audiosPath   : 'ress/audios/'
+
+		canvas = $('canvas').first
+
+		storage.loadMeshes   meshRegistrator.pack
+		storage.loadTextures textureRegistrator.pack
+
+		ui.init @
 
 		@controller = new GeneralController
 			'storage' : storage
@@ -24,9 +58,4 @@ class @App
 		do @controller.save
 
 	getSaves : ->
-		states = {}
-
-		for time, data of localStorage
-			states[time] = JSON.parse data
-
-		return states
+		return @controller.saveManager.saves

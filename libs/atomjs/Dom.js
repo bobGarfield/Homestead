@@ -10,7 +10,7 @@ license:
 	- "[MIT License](http://opensource.org/licenses/mit-license.php)"
 
 requires:
-	- atom
+	- Core
 	- accessors
 
 inspiration:
@@ -20,34 +20,14 @@ provides: dom
 
 ...
 */
-new function () {
-	var undefined,
-		win = window,
-		doc = win.document,
-		tagNameRE = /^[-_a-z0-9]+$/i,
-		classNameRE = /^\.[-_a-z0-9]+$/i,
-		idRE = /^#[-_a-z0-9]+$/i,
-		toArray = atom.toArray,
-		isArray = Array.isArray,
-		length = 'length',
-		getElement = 'getElement',
-		getElementById = getElement + 'ById',
-		getElementsByClassName = getElement + 'sByClassName',
-		getElementsByTagName = getElement + 'sByTagName',
-		querySelectorAll = 'querySelectorAll',
-		EventListener = 'EventListener',
-		addEventListener = 'add' + EventListener,
-		removeEventListener = 'remove' + EventListener,
-		appendChild = 'appendChild',
-		setter = function (args) {
-			if (args.length == 1) {
-				return args[0];
-			} else {
-				var r = {};
-				r[args[0]] = args[1];
-				return r;
-			}
+(function (window, document) {
+	var
+		regexp = {
+			Tag  : /^[-_a-z0-9]+$/i,
+			Class: /^\.[-_a-z0-9]+$/i,
+			Id   : /^#[-_a-z0-9]+$/i
 		},
+		isArray = Array.isArray,
 		prevent = function (e) {
 			e.preventDefault();
 			return false;
@@ -62,76 +42,70 @@ new function () {
 		domReady = false,
 		onDomReady = [],
 		camelCase = function (str) {
-			return str.replace(/-\D/g, function(match){
+			return String(str).replace(/-\D/g, function(match){
 				return match[1].toUpperCase();
 			});
 		},
-		bind = function (fn, context) {
-			for (var i = 0 ; i<bind.contexts.length ; i++) {
-				if (bind.contexts[i] === context && bind.functions[i] === fn) {
-					return bind.results[i];
-				}
-			}
-			
-			bind.results.push( fn.bind(context) );
-			bind.contexts.push(context);
-			bind.functions.push(fn);
-			
-			return bind.results[bind.results.length-1];
-		};
-		
-		bind.contexts  = [];
-		bind.functions = [];
-		bind.results   = [];
-	
-	new function () {
-		var ready = function () {
+		hyphenate = function (str) {
+			return String(str).replace(/[A-Z]/g, function(match){
+				return '-' + match[0].toLowerCase();
+			});
+		},
+		readyCallback = function () {
 			if (domReady) return;
 			
 			domReady = true;
 			
-			for (var i = 0, l = onDomReady[length]; i < l; onDomReady[i++]());
+			for (var i = 0; i < onDomReady.length;) {
+				onDomReady[i++]();
+			}
 			
 			onDomReady = [];
+		},
+		findParentByLevel = function (elem, level) {
+			if (level == null || level < 0) level = 1;
+
+			if (!elem || level <= 0) return atom.dom(elem);
+
+			return findParentByLevel(elem.parentNode, level-1);
 		};
 		
-		doc[addEventListener]('DOMContentLoaded', ready, false);
-		win[addEventListener]('load', ready, false);
-	};
+	document.addEventListener('DOMContentLoaded', readyCallback, false);
+	window.addEventListener('load', readyCallback, false);
 
-	var dom = function (sel, context) {
-		if (! (this instanceof dom)) {
-			return new dom(sel, context);
+	var Dom = function (sel, context) {
+		if (! (this instanceof Dom)) {
+			return new Dom(sel, context);
 		}
 
-		if (!arguments[length]) {
-			this.elems = [doc];
+		if (!arguments.length) {
+			this.elems = [document];
 			return this;
 		}
 
 		if (!context && sel === 'body') {
-			this.elems = [doc.body];
+			this.elems = [document.body];
 			return this;
 		}
 
 		if (context !== undefined) {
-			return new dom(context || doc).find(sel);
+			return new Dom(context || document).find(sel);
 		}
-		context = context || doc;
+		context = context || document;
 
-		if (typeof sel == 'function' && !(sel instanceof dom)) {
+		if (typeof sel == 'function' && !(sel instanceof Dom)) {
 			// onDomReady
-			var fn = sel.bind(this, atom, dom);
+			var fn = sel.bind(this, atom, Dom);
 			domReady ? setTimeout(fn, 1) : onDomReady.push(fn);
 			return this;
 		}
 
 		var elems = this.elems =
-			  sel instanceof HTMLCollection ? toArray(sel)
-			: typeof sel == 'string' ? dom.query(context, sel)
-			: sel instanceof dom     ? toArray(sel.elems)
-			: isArray(sel)           ? toArray(sel)
-			:                          dom.find(context, sel);
+			  sel == window          ? [ document ]
+			: sel instanceof Dom     ? coreToArray(sel.elems)
+			: coreIsArrayLike(sel)   ? coreToArray(sel)
+			: typeof sel == 'string' ? Dom.query(context, sel)
+			:                          Dom.find(context, sel);
 
 		if (elems.length == 1 && elems[0] == null) {
 			elems.length = 0;
@@ -139,29 +113,30 @@ new function () {
 
 		return this;
 	};
-	atom.extend(dom, {
+	coreAppend(Dom, {
 		query : function (context, sel) {
-			return sel.match(idRE)        ?        [context[getElementById        ](sel.substr(1))] :
-			       sel.match(classNameRE) ? toArray(context[getElementsByClassName](sel.substr(1))) :
-			       sel.match(tagNameRE)   ? toArray(context[getElementsByTagName  ](sel)) :
-			                                toArray(context[querySelectorAll      ](sel));
+			return sel.match(regexp.Id)    ? [(context.getElementById ? context : document).getElementById(sel.substr(1))] :
+			       sel.match(regexp.Class) ? coreToArray(context.getElementsByClassName(sel.substr(1))) :
+			       sel.match(regexp.Tag)   ? coreToArray(context.getElementsByTagName  (sel)) :
+			                                 coreToArray(context.querySelectorAll      (sel));
 		},
 		find: function (context, sel) {
 			if (!sel) return context == null ? [] : [context];
 
 			var result = sel.nodeName ? [sel]
-				: typeof sel == 'string' ? dom.query(context, sel) : [context];
+				: typeof sel == 'string' ? Dom.query(context, sel) : [context];
 			return (result.length == 1 && result[0] == null) ? [] : result;
 		},
 		create: function (tagName, attr) {
-			var elem = new dom(document.createElement(tagName));
-			return attr ? elem.attr(attr) : elem;
+			var elem = new Dom(document.createElement(tagName));
+			if (attr) elem.attr(attr);
+			return elem;
 		},
 		isElement: function (node) {
 			return !!(node && node.nodeName);
 		}
 	});
-	atom.implement(dom, {
+	Dom.prototype = {
 		get length() {
 			return this.elems ? this.elems.length : 0;
 		},
@@ -172,36 +147,47 @@ new function () {
 			return this.elems[0];
 		},
 		get : function (index) {
-			return this.elems[index * 1 || 0];
+			return this.elems[Number(index) || 0];
 		},
 		parent : function(step) {
-			if(step === undefined)
-				var step = 1;
-			var stepCount = function(elem, step) {
-				if(step > 0) {
-					step--;
-					return stepCount(atom.dom(elem.first.parentNode), step);
-				}
-				return elem;
-			};
-			return stepCount(this, step);
+			return findParentByLevel(this.first, step);
 		},
-		filter: function (sel) {
-			if (sel.match(tagNameRE)) var tag = sel.toUpperCase();
-			if (sel.match(idRE     )) var id  = sel.substr(1).toUpperCase();
-			return new dom(this.elems.filter(function (elem) {
-				return tag ? elem.tagName.toUpperCase() == tag :
-				       id  ? elem.id     .toUpperCase() == id :
-				  elem.parentNode && toArray(
-				    elem.parentNode.querySelectorAll(sel)
-				  ).indexOf(elem) >= 0;
+		contains: function (child) {
+			var parent = this.first;
+			child = atom.dom(child).first;
+			if ( child ) while ( child = child.parentNode ) {
+				if( child == parent ) {
+					return true;
+				}
+			}
+			return false;
+		},
+		filter: function (selector) {
+			var property = null;
+			// speed optimization for "tag" & "id" filtering
+			if (selector.match(regexp.Tag)) {
+				selector = selector.toUpperCase();
+				property = 'tagName';
+			} else if (selector.match(regexp.Id)) {
+				selector = selector.substr(1).toUpperCase();
+				property = 'id';
+			}
+
+			return new Dom(this.elems.filter(function (elem) {
+				if (property) {
+					return elem[property].toUpperCase() == selector;
+				} else {
+					return elem.parentNode && coreToArray(
+						elem.parentNode.querySelectorAll(selector)
+					).indexOf(elem) >= 0;
+				}
 			}));
 		},
 		is: function (selector) {
 			return this.filter(selector).length > 0;
 		},
 		html : function (value) {
-			if (value !== undefined) {
+			if (value != null) {
 				this.first.innerHTML = value;
 				return this;
 			} else {
@@ -209,16 +195,11 @@ new function () {
 			}
 		},
 		text : function (value) {
-			if(document.getElementsByTagName("body")[0].innerText != undefined) {
-				if(value === undefined)
-					return this.first.innerText;
-				this.first.innerText = value;
+			var property = document.body.innerText == null ? 'textContent' : 'innerText';
+			if (value == null) {
+				return this.first[property];
 			}
-			else {
-				if(value === undefined)
-					return this.first.textContent;
-				this.first.textContent = value;
-			}
+			this.first[property] = value;
 			return this;
 		},
 		create : function (tagName, index, attr) {
@@ -233,160 +214,176 @@ new function () {
 			this.elems.forEach(fn.bind(this));
 			return this;
 		},
-		attr : function (attr) {
-			attr = setter(arguments);
-			if (typeof attr == 'string') {
-				return this.first.getAttribute(attr);
+		attr : atom.core.slickAccessor({
+			get: function (name) {
+				return this.first.getAttribute(name);
+			},
+			set: function (name, value) {
+				var e = this.elems, i = e.length;
+				while (i--) {
+					e[i].setAttribute(name, value)
+				}
 			}
-			return this.each(function (elem) {
-				for (var i in attr) elem.setAttribute(i, attr[i]);
-			});
-		},
-		css : function (css) {
-			css = setter(arguments);
-			if (typeof css == 'string') {
-				return window.getComputedStyle(this.first, "").getPropertyValue(css);
-			}
-			return this.each(function (elem) {
-				for (var i in css) {
-					var value = css[i];
-					if (typeof value == 'number' && !ignoreCssPostfix[i]) {
+		}),
+		css : atom.core.slickAccessor({
+			get: function (name) {
+				return window.getComputedStyle(this.first, "").getPropertyValue(hyphenate(name));
+			},
+			set: function (name, value) {
+				var e = this.elems, i = e.length;
+				while (i--) {
+					if (typeof value == 'number' && !ignoreCssPostfix[name]) {
 						value += 'px';
 					}
-					elem.style[camelCase(i)] = value;
+					e[i].style[camelCase(name)] = value;
 				}
-			});
-		},
+			}
+		}),
 		
-		bind : function () {
-			var events = setter(arguments);
-			
-			for (var i in events) {
-				var fn = events[i] === false ? prevent : bind(events[i], this);
-				
-				this.each(function (elem) {
-					if (elem == doc && i == 'load') elem = win;
-					elem[addEventListener](i, fn, false);
-				});
-			}
+		bind : atom.core.overloadSetter(function (event, callback) {
+			if (callback === false) callback = prevent;
+
+			this.each(function (elem) {
+				if (elem == document && event == 'load') elem = window;
+				elem.addEventListener(event, callback, false);
+			});
 			
 			return this;
-		},
-		unbind : function () {
-			var events = setter(arguments);
-			
-			for (var i in events) {
-				var fn = events[i] === false ? prevent : bind(events[i], this);
+		}),
+		unbind : atom.core.overloadSetter(function (event, callback) {
+			if (callback === false) callback = prevent;
 				
-				this.each(function (elem) {
-					if (elem == doc && i == 'load') elem = win;
-					elem[removeEventListener](i, fn, false);
-				});
-			}
+			this.each(function (elem) {
+				if (elem == document && event == 'load') elem = window;
+				elem.removeEventListener(event, callback, false);
+			});
 			
 			return this;
-		},
+		}),
 		delegate : function (selector, event, fn) {
 			return this.bind(event, function (e) {
-				if (new dom(e.target).is(selector)) {
+				if (new Dom(e.target).is(selector)) {
 					fn.apply(this, arguments);
 				}
 			});
 		},
 		wrap : function (wrapper) {
-			wrapper = new dom(wrapper).first;
+			wrapper = new Dom(wrapper).first;
 			return this.replaceWith(wrapper).appendTo(wrapper);
 		},
 		replaceWith: function (element) {
-			element = dom(element).first;
 			var obj = this.first;
+			element = Dom(element).first;
 			obj.parentNode.replaceChild(element, obj);
 			return this;
 		},
 		find : function (selector) {
 			var result = [];
 			this.each(function (elem) {
-				var found = dom.find(elem, selector);
-				for (var i = 0, l = found[length]; i < l; i++) {
-					if (result.indexOf(found[i]) === -1) result.push(found[i]);
-				}
+				var i = 0,
+					found = Dom.find(elem, selector),
+					l = found.length;
+				while (i < l) includeUnique(result, found[i++]);
 			});
-			return new dom(result);
+			return new Dom(result);
 		},
 		appendTo : function (to) {
-			var fr = doc.createDocumentFragment();
+			var fr = document.createDocumentFragment();
 			this.each(function (elem) {
-				fr[appendChild](elem);
+				fr.appendChild(elem);
 			});
-			dom(to).first[appendChild](fr);
+			Dom(to).first.appendChild(fr);
 			return this;
 		},
-		addClass: function (classNames) {
+		/** @private */
+		manipulateClass: function (classNames, fn) {
 			if (!classNames) return this;
-
 			if (!isArray(classNames)) classNames = [classNames];
 
 			return this.each(function (elem) {
-				var property = elem.className, current = ' ' + property + ' ';
+				var i, all = elem.className.split(/\s+/);
 
-				for (var i = classNames.length; i--;) {
-					var c = ' ' + classNames[i];
-					if (current.indexOf(c + ' ') < 0) property += c;
+				for (i = classNames.length; i--;) {
+					fn.call(this, all, classNames[i]);
 				}
 
-				elem.className = property.trim();
+				elem.className = all.join(' ').trim();
 			});
 		},
+		addClass: function (classNames) {
+			return this.manipulateClass(classNames, includeUnique);
+		},
 		removeClass: function (classNames) {
-            if (!classNames) return this;
-
-			if (!isArray(classNames)) classNames = [classNames];
-
-			return this.each(function (elem) {
-				var current = ' ' + elem.className + ' ';
-				for (var i = classNames.length; i--;) {
-					current = current.replace(' ' + classNames[i] + ' ', ' ');
+			return this.manipulateClass(classNames, coreEraseAll);
+		},
+		toggleClass: function(classNames) {
+			return this.manipulateClass(classNames, function (all, c) {
+				var i = all.indexOf(c);
+				if (i === -1) {
+					all.push(c);
+				} else {
+					all.splice(i, 1);
 				}
-				elem.className = current.trim();
 			});
 		},
 		hasClass: function(classNames) {
-			if(!classNames) return false;
-
-			if(!isArray(classNames)) classNames = [classNames];
-
+			if (!classNames) return this;
+			if (!isArray(classNames)) classNames = [classNames];
+			
 			var result = false;
 			this.each(function (elem) {
-				var property = elem.className, current = ' ' + property + ' ';
+				if (result) return;
+				
+				var i = classNames.length,
+					all = elem.className.split(/\s+/);
 
-				var elemResult = true;
-				for (var i = classNames.length; i--;) {
-					elemResult = elemResult && (current.indexOf(' ' + classNames[i] + ' ') >= 0);
+				while (i--) if (!coreContains(all, classNames[i])) {
+					return;
 				}
 
-				result = result || elemResult;
+				result = true;
 			});
 			return result;
 		},
-		toggleClass: function(classNames) {
-			if(!classNames) return this;
+		offset: function () {
+			var element = this.first;
+			if (element.offsetX != null) {
+				return { x: element.offsetX, y: element.offsetY };
+			}
 
-			if(!isArray(classNames)) classNames = [classNames];
+			var box = element.getBoundingClientRect(),
+				body    = document.body,
+				docElem = document.documentElement,
+				scrollLeft = window.pageXOffset || docElem.scrollLeft || body.scrollLeft,
+				scrollTop  = window.pageYOffset || docElem.scrollTop  || body.scrollTop,
+				clientLeft = docElem.clientLeft || body.clientLeft || 0,
+				clientTop  = docElem.clientTop  || body.clientTop  || 0;
 
+			return {
+				x: Math.round(box.left + scrollLeft - clientLeft),
+				y: Math.round(box.top  + scrollTop  - clientTop )
+			};
+		},
+		clone: function (deep) {
+			var i = 0, elements = [];
+
+			if (deep == null) deep = true;
+
+			for (; i < this.elems.length; i++) {
+				elements.push(this.elems[i].cloneNode(deep));
+			}
+
+			return atom.dom(elements);
+		},
+		empty: function () {
 			return this.each(function (elem) {
-				var property = elem.className, current = ' ' + property + ' ';
-
-				for (var i = classNames.length; i--;) {
-					var c = ' ' + classNames[i];
-					if (current.indexOf(c + ' ') < 0) current = c + current;
-					else current = current.replace(c + ' ', ' ');
+				while (elem.hasChildNodes()) {
+					elem.removeChild( elem.firstChild );
 				}
-
-				elem.className = current.trim();
 			});
 		},
 		log : function () {
-			atom.log.apply(atom, arguments[length] ? arguments : ['atom.dom', this.elems]);
+			console.log('atom.dom: ', this.elems);
 			return this;
 		},
 		destroy : function () {
@@ -394,8 +391,8 @@ new function () {
 				elem.parentNode.removeChild(elem);
 			});
 		},
-		constructor: dom
-	});
+		constructor: Dom
+	};
 
-	atom.extend({ dom: dom });
-};
+	atom.dom = Dom;
+}(window, window.document));

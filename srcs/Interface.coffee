@@ -2,36 +2,63 @@
 class @Interface
 
 	## Private
-	b = null
 	a = null
 
-	makeItem = (args...) ->
-		item = make 'tr'
-
-		args.each (text, index) ->
-			cell = item.insertCell index
-			cell.textContent = text
-
-		return item
-	
-	constructor : ->
-		b = $ 'body'
+	constructor : (@parts) ->
+		@b = $ 'body'
 
 	init : (app) ->
 		a = app
 
-		@showMessage 'Now more interactive!'
+		@b.bind 'contextmenu', false
 
-		preventDefaults b, 'oncontextmenu'
+		do @loadParts
+		do @bindParts
 
-		# Setting current section to menu section
-		@current = @elements.menu
+	linkAggregates : (@aggregates) ->
 
-		do @bindEvents
+	loadParts : ->
+		{parts} = @
 
-	## Interactive
+		for type, selectors of parts
+			for name, selector of selectors
+				parts[type][name] = $ selector
 
-	# Show text message
+	bindParts : ->
+		{buttons, sections, lists} = @parts
+
+		switcher = /switch/
+
+		for button, dom of buttons
+			if switcher.test button
+				dom.bind 'click', ->
+					for section, dom of sections then do dom.close
+
+					key = @className.replace(switcher, '').toLowerCase()
+
+					do sections[key].switch
+
+		buttons.switchJournal.bind 'click', =>
+			do @drawJournal
+
+		buttons.switchLoader.bind 'click', =>
+			do @drawLoader
+
+		buttons.launchGame.bind 'click', ->
+			for section, dom of sections then do dom.close
+			do sections.game.switch
+
+			do a.launchGame
+
+		buttons.saveGame.bind 'click', ->
+			do a.saveGame
+
+		buttons.stopGame.bind 'click', ->
+			for section, dom of sections then do dom.close
+			do sections.menu.switch
+
+			do a.stopGame
+
 	showMessage : (text) ->
 		message = make 'div'
 
@@ -42,121 +69,47 @@ class @Interface
 
 		b.appendChild message
 
-	## Agregates operations
-
-	# Link all parts
-	linkParts : (pack) ->
-		elements = {}
-		buttons  = {}
-
-		element = /#/
-		button  = /\./
-
-		pack.each (part) ->
-			elements[part.replace element, ''] = $(part)  if element.test part
-			buttons[part.replace button, '']   = $$(part) if button.test part
-
-		@elements = elements
-		@buttons  = buttons
-
-	# Link agregates
-	linkAggregates : (@aggregates) ->
-
-	bindEvents : ->
-		{buttons, elements} = @
-
-		open   = @open.bind @
-		prefix = /(open)/g
-
-		for type, collection of buttons then do ->
-			collection.each (button) ->
-				section = elements[type.replace(prefix, '').toLowerCase()]
-
-				# Check if button is special
-				return unless section
-
-				button.onclick = -> open section
-
-		# Setting up special handlers
-
-		buttons.launchGame.each (button) =>
-			button.onclick = =>
-				open elements.game
-
-				do a.launchGame
-
-		buttons.saveGame.each (button) =>
-			button.onclick = =>
-				do a.saveGame
-
-		buttons.switchJournal.each (button) =>
-			button.onclick = =>
-				open elements.journal
-
-				do @drawJournal
-
-		buttons.switchLoader.each (button) =>
-			button.onclick = =>
-				open elements.loader
-
-				do @drawLoader
-
-		buttons.stopGame.each (button) =>
-			button.onclick = =>
-				open elements.menu
-
-				do a.stopGame
-
-		return
-		
-	# Make section current
-	open : (section) ->
-		{current} = @
-
-		toggleDisplay current, 'none'
-		toggleDisplay section, 'block'
-
-		@current = section
-
-	## Dom operations
-
-	# Draw player's journal
 	drawJournal : ->
-		{inventory    } = @aggregates
-		{inventoryList} = @elements
-		{container    } = inventory
+		{inventory} = @aggregates
+		{container} = inventory
+		{blockList, weaponList} = @parts.lists
 
-		removeItemsFrom inventoryList
+		do $('.item').destroy
 
-		for id, quantity of container.blocks
-			item = makeItem(id, quantity)
+		for type, quantity of container.blocks
+			item = $.createRow(type, quantity)
 
-			item.id        = id
-			item.className = if id is inventory.current then 'currentItem' else 'item'
+			.attr
+				id : type
 
-			item.onclick = ->
-				resetClassNamesFor inventoryList.children
+			.addClass('item')
 
+			.bind 'click', ->
+				$(@parentNode.children).removeClass 'current'
 				inventory.currentBlock = @id
-				@className = 'currentItem'
+				$(@).addClass 'current'
 
-			inventoryList.appendChild item
+			item.addClass 'current' if type is inventory.currentBlock
+
+			item.appendTo blockList
 
 	# Draw App's loader
 	drawLoader : ->
-		{loaderList} = @elements
+		{saveList} = @parts.lists
+
+		do $('.item').destroy
 
 		saves = a.getSaves()
 
-		removeItemsFrom loaderList
+		for key of saves
+			$.createRow(key)
 
-		for time of saves
-			item = makeItem time
+			.attr
+				id : key
 
-			item.id = time
-			item.className = 'savegame'
+			.addClass('item')
 
-			item.onclick = -> 
+			.bind 'click', ->
 				a.loadGame @id
 
-			loaderList.appendChild item
+			.appendTo saveList

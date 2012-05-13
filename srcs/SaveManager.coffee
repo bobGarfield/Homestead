@@ -16,3 +16,11 @@ class @SaveManager
 		state = new State data, key
 
 		return state
+
+	@get 'saves', ->
+		states = {}
+
+		for key, data of localStorage
+			states[key] = JSON.parse data
+
+		return states

@@ -7,22 +7,24 @@ global.namespace = (name, body) ->
 	space.namespace ?= global.namespace
 	body.call space
 
-## Function
+# Alias for atom.dom
+global.$ = atom.dom
+
+## Function + Atom
 
 # Define setter
 Function::set = (prop, callback) ->
-	@::__defineSetter__ prop, callback
+	atom.accessors.define @::, prop, 'set' : callback
 	
 # Define getter
 Function::get = (prop, callback) ->
-	@::__defineGetter__ prop, callback
+	atom.accessors.define @::, prop, 'get' : callback
 
 # Define both setter and getter
-Function::both = (prop, opts) ->
-	@::__defineSetter__ prop, opts.set
-	@::__defineGetter__ prop, opts.get 
-
-## Number
+Function::two = (prop, opts) ->
+	atom.accessors.define @::, prop,
+		'set' : opts.set
+		'get' : opts.get
 
 # Get random number less than @
 Number::rand = ->
@@ -46,19 +48,19 @@ Number::round = ->
 # Short forEach
 Array::each = Array::forEach
 
-Array.both 'first',
+Array.two 'first',
 	get : (      -> return @[0]),
 	set : ((val) -> @[0] = val )
 
-Array.both 'last',
+Array.two 'last',
 	get : (      -> return @[@length-1]),
 	set : ((val) -> @[@length-1] = val )
 
-Array.both 'second',
+Array.two 'second',
 	get : (      -> return @[1]),
 	set : ((val) -> @[1] = val )
 
-Array.both 'penult',
+Array.two 'penult',
 	get : (      -> return @[@length-2]),
 	set : ((val) -> @[@length-2] = val )
 
@@ -71,42 +73,22 @@ Array.get 'height', ->
 Array::rand = ->
 	return @[@length.rand()]
 
-## Dom
-
-# Short querySelector
-global.$ = (query) ->
-	global.document.querySelector(query)
-
-# Short querySelectorAll
-global.$$ = (query) ->
-	global.document.querySelectorAll(query)
-
-# Set display style
-global.toggleDisplay = (element, type) ->
-	element.style.display = type
-
-global.preventDefaults = (element, event) ->
-	element[event] = ->
-		return false
-
-# Short createElement
-global.make = (tag, className = '', id = '') ->
-	elem = global.document.createElement tag
-
-	elem.id        = id
-	elem.className = className
-
-	return elem
-
 global.resetClassNamesFor = (elements) ->
 	elements.each (element) ->
 		element.className = ''
 
-# Iterator for NodeList
-NodeList      ::each = Array::each
-HTMLCollection::each = Array::each
+atom.dom.createRow = (texts...) ->
+	row = $.create 'tr'
 
-# Remove all rows from table
-global.removeItemsFrom = (table) ->
-	while table.rows.length
-		table.deleteRow 0
+	texts.each (text) ->
+		col = $.create 'td'
+		col.text text
+		col.appendTo row.first
+
+	return row
+
+atom.dom::switch = ->
+	@removeClass 'invisible'
+
+atom.dom::close = ->
+	@addClass 'invisible'

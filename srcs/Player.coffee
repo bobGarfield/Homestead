@@ -3,6 +3,7 @@
 class @Player
 	## Private
 	shapeHeight = 80
+	shapeWidth  = 40
 
 	## Public
 	constructor : (@inventory) ->		
@@ -38,3 +39,12 @@ class @Player
 
 	@get 'body', ->
 		return @coordinate
+
+	@get 'tool', ->
+		tool = @coordinate.clone()
+
+		tool.y -= shapeHeight/4
+		tool.x += shapeWidth/2
+
+		return tool
+

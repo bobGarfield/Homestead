@@ -13,178 +13,147 @@ inspiration:
   - "[JQuery](http://jquery.com)"
   - "[MooTools](http://mootools.net)"
 
-provides: atom
+provides: Core
+
+requires:
+	- js185
 
 ...
 */
 
-var
-	prototype = 'prototype',
-	apply     = 'apply',
-	toString  = Object[prototype].toString,
-	slice     = [].slice;
+function coreIsFunction (item) {
+	return item && toString.call(item) == '[object Function]';
+}
 
-var atom = this.atom = function () {
-	if (atom.initialize) return atom.initialize[apply](this, arguments);
-};
-
-atom.global = this;
-
-var innerExtend = function (proto) {
-	return function (elem, from) {
-		if (from == null) {
-			from = elem;
-			elem = atom;
+function coreObjectize (properties, value) {
+	if (typeof properties != 'object') {
+		var key = properties;
+		properties = {};
+		if (key != null) {
+			properties[key] = value;
 		}
-
-		var ext = proto ? elem[prototype] : elem,
-		    accessors = atom.accessors && atom.accessors.inherit;
-
-		for (var i in from) if (i != 'constructor') {
-			if ( accessors && accessors(from, ext, i) ) continue;
-
-			ext[i] = clone(from[i]);
-		}
-		return elem;
-	};
-};
-
-var typeOf = function (item) {
-	if (item == null) return 'null';
-
-	var string = toString.call(item);
-	for (var i in typeOf.types) if (i == string) return typeOf.types[i];
-
-	if (item.nodeName){
-		if (item.nodeType == 1) return 'element';
-		if (item.nodeType == 3) return /\S/.test(item.nodeValue) ? 'textnode' : 'whitespace';
 	}
+	return properties;
+}
 
-	var type = typeof item;
+function coreContains (array, element) {
+	return array.indexOf(element) >= 0;
+}
 
-	if (item && type == 'object') {
-		if (atom.Class && item instanceof atom.Class) return 'class';
-		if (atom.isEnumerable(item)) return 'arguments';
+function includeUnique(array, element) {
+	if (!coreContains(array, element)) {
+		array.push(element);
 	}
+	return array;
+}
 
-	return type;
-};
-typeOf.types = {};
-['Boolean', 'Number', 'String', 'Function', 'Array', 'Date', 'RegExp', 'Class'].forEach(function(name) {
-	typeOf.types['[object ' + name + ']'] = name.toLowerCase();
-});
-
-
-var clone = function (object) {
-	var type = typeOf(object);
-	return type in clone.types ? clone.types[type](object) : object;
-};
-clone.types = {
-	array: function (array) {
-		var i = array.length, c = new Array(i);
-		while (i--) c[i] = clone(array[i]);
-		return c;
-	},
-	object: function (object) {
-		if (typeof object.clone == 'function') return object.clone();
-
-		var c = {}, accessors = atom.accessors && atom.accessors.inherit;
-		for (var key in object) {
-			if (accessors && accessors(object, c, key)) continue;
-			c[key] = clone(object[key]);
-		}
-		return c;
+function coreEraseOne(array, element) {
+	element = array.indexOf(element);
+	if (element != -1) {
+		array.splice( element, 1 );
 	}
-};
+	return array;
+}
 
-atom.extend = innerExtend(false);
-
-atom.extend({
-	implement: innerExtend(true),
-	toArray: function (elem) {
-		return slice.call(elem);
-	},
-	/**
-	 * @deprecated - use console-cap instead:
-	 * @see https://github.com/theshock/console-cap/
-	 */
-	log: function () {
-		// ie9 bug, typeof console.log == 'object'
-		if (atom.global.console) Function.prototype.apply.call(console.log, console, arguments);
-	},
-	isEnumerable: function(item){
-		return item != null && toString.call(item) != '[object Function]' && typeof item.length == 'number';
-	},
-	append: function (target, source) {
-		for (var i = 1, l = arguments.length; i < l; i++){
-			source = arguments[i] || {};
-			for (var key in source) {
-				target[key] = source[key];
-			}
+function coreEraseAll(array, element) {
+	for (var i = array.length; i--;) {
+		if (array[i] == element) {
+			array.splice( i, 1 );
 		}
-		return target;
-	},
-	typeOf: typeOf,
-	clone: clone
-});
+	}
+	return array;
+}
+function coreToArray (elem) { return slice.call(elem) }
+function coreIsArrayLike (item) {
+	return item && (Array.isArray(item) || (
+		typeof item != 'string' &&
+		!coreIsFunction(item) &&
+		typeof item.nodeName != 'string' &&
+		typeof item.length == 'number'
+	));
+}
+function coreAppend(target, source) {
+	if (source) for (var key in source) if (hasOwn.call(source, key)) {
+		target[key] = source[key];
+	}
+	return target;
+}
 
-// JavaScript 1.8.5 Compatiblity
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Function/bind
+new function () {
 
-if (!Function.prototype.bind) {
-	Function.prototype.bind = function(context /*, arg1, arg2... */) {
-		if (typeof this !== "function") throw new TypeError("Function.prototype.bind - what is trying to be bound is not callable");
-
-		var args   = slice.call(arguments, 1),
-			toBind = this,
-			Nop    = function () {},
-			Bound  = function () {
-				var isInstance;
-				// Opera & Safari bug fixed. I must fix it in right way
-				// TypeError: Second argument to 'instanceof' does not implement [[HasInstance]]
-				try {
-					isInstance = this instanceof Nop;
-				} catch (ignored) {
-					// console.log( 'bind error', Nop.prototype );
-					isInstance = false;
+	function ensureObjectSetter (fn) {
+		return function (properties, value) {
+			return fn.call(this, coreObjectize(properties, value))
+		}
+	}
+	function overloadSetter (fn) {
+		return function (properties, value) {
+			properties = coreObjectize(properties, value);
+			for (var i in properties) fn.call( this, i, properties[i] );
+			return this;
+		};
+	}
+	function overloadGetter (fn, ignoreEmpty) {
+		return function (properties) {
+			if (Array.isArray(properties)) {
+				var result = {}, name, value;
+				for (var i = properties.length; i--;) {
+					name = properties[i];
+					value = fn.call(this, name);
+					if (!ignoreEmpty || typeof value !== 'undefined') {
+						result[name] = value;
+					}
 				}
-				return toBind.apply(
-					isInstance ? this : ( context || {} ),
-					args.concat( slice.call(arguments) )
-				);
-			};
-		Nop.prototype   = toBind.prototype;
-		Bound.prototype = new Nop();
-		return Bound;
-	};
-}
+				return result;
+			}
+			return fn.call(this, properties);
+		};
+	}
+	/**
+	 * Returns function that calls callbacks.get
+	 * if first parameter is primitive & second parameter is undefined
+	 *     object.attr('name')          - get
+	 *     object.attr('name', 'value') - set
+	 *     object.attr({name: 'value'}) - set
+	 * @param {Object} callbacks
+	 * @param {Function} callbacks.get
+	 * @param {Function} callbacks.set
+	 */
+	function slickAccessor (callbacks) {
+		var setter =  atom.core.overloadSetter(callbacks.set);
 
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/keys
-if (!Object.keys) {
-	Object.keys = function(obj) {
-		if (obj !== Object(obj)) throw new TypeError('Object.keys called on non-object');
+		return function (properties, value) {
+			if (typeof value === 'undefined' && typeof properties !== 'object') {
+				return callbacks.get.call(this, properties);
+			} else {
+				return setter.call(this, properties, value);
+			}
+		};
+	}
 
-		var keys = [], i, has = Object[prototype].hasOwnProperty;
-		for (i in obj) if (has.call(obj, i)) keys.push(i);
-		return keys;
+	atom.core = {
+		isFunction: coreIsFunction,
+		objectize : coreObjectize,
+		contains  : coreContains,
+		eraseOne  : coreEraseOne,
+		eraseAll  : coreEraseAll,
+		toArray   : coreToArray,
+		append    : coreAppend,
+		isArrayLike   : coreIsArrayLike,
+		includeUnique : includeUnique,
+		slickAccessor : slickAccessor,
+		overloadSetter: overloadSetter,
+		overloadGetter: overloadGetter,
+		ensureObjectSetter: ensureObjectSetter
 	};
-}
 
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Array/isArray
-if (!Array.isArray) {
-	Array.isArray = function(o) {
-		return o && toString.call(o) === '[object Array]';
-	};
-}
+	/** @deprecated - use atom.core.toArray instead */
+	atom.toArray   = coreToArray;
+	/** @deprecated - use console-cap instead: https://github.com/theshock/console-cap/ */
+	atom.log = function () { throw new Error('deprecated') };
+	/** @deprecated - use atom.core.isArrayLike instead */
+	atom.isArrayLike = coreIsArrayLike;
+	/** @deprecated - use atom.core.append instead */
+	atom.append = coreAppend;
 
-// https://developer.mozilla.org/en/JavaScript/Reference/Global_Objects/Object/create
-if (!Object.create) {
-	Object.create = function (o) {
-		if (arguments.length > 1) {
-			throw new Error('Object.create implementation only accepts the first parameter.');
-		}
-		function F() {}
-		F.prototype = o;
-		return new F();
-	};
-}
+};

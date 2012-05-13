@@ -1,8 +1,7 @@
 section#game
 {
 	background : black;
-
-	display : none;
+	box-shadow : none;
 }
 
 canvas#window

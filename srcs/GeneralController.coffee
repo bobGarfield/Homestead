@@ -165,11 +165,14 @@ class @GeneralController
 	initActions : ->
 		{ui, mapManager, shapeManager} = @
 
-		{inventory} = @player
+		{player   } = @
+		{inventory} = player
 		{camera   } = paper.view
 
 		@eventManager.setAttackHandler (event) ->
 			map = mapManager.current ; point = event.point.add camera.box
+
+			shapeManager.makeRay 'white', player.tool, point
 
 			point.x -= map.cellSize/4
 

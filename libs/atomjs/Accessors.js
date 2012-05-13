@@ -10,7 +10,7 @@ license:
 	- "[MIT License](http://opensource.org/licenses/mit-license.php)"
 
 requires:
-	- atom
+	- Core
 
 provides: accessors
 
@@ -35,7 +35,7 @@ provides: accessors
 			if (!descriptor) {
 				// try to find accessors according to chain of prototypes
 				var proto = Object.getPrototypeOf(from);
-				if (proto) return accessors.lookup(proto, key, bool);
+				if (proto) return atom.accessors.lookup(proto, key, bool);
 			} else if ( descriptor.set || descriptor.get ) {
 				if (bool) return true;
 
@@ -68,22 +68,27 @@ provides: accessors
 			return object;
 		};
 
-	var accessors = {
+	atom.accessors = {
 		lookup: lookup,
-		define: define,
+		define: function (object, prop, descriptor) {
+			if (typeof prop == 'object') {
+				for (var i in prop) define(object, i, prop[i]);
+			} else {
+				define(object, prop, descriptor);
+			}
+			return object;
+		},
 		has: function (object, key) {
-			return accessors.lookup(object, key, true);
+			return atom.accessors.lookup(object, key, true);
 		},
 		inherit: function (from, to, key) {
-			var a = accessors.lookup(from, key);
+			var a = atom.accessors.lookup(from, key);
 
 			if ( a ) {
-				accessors.define(to, key, a);
+				atom.accessors.define(to, key, a);
 				return true;
 			}
 			return false;
 		}
 	};
-
-	atom.extend({ accessors: accessors });
 })(Object);

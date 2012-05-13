@@ -1,15 +1,13 @@
 section#journal
 {
-	background : #000;
-
-	display : none;
+	background : black;
 }
 
 section#journal div.box
 {
 	border-radius : 20px;
-	
-	background : url(../ress/graphics/boxBackground.png);
+
+	background : url(../ress/graphics/decor.png);
 }
 
 div#inventory
@@ -18,52 +16,78 @@ div#inventory
 
 	left : 20px;
 
-	width  : 60% ;
+	width  :  60%;
 	height : 100%;
+
+	margin  : 0;
+	padding : 0;
 
 	text-align : center;
 
-	box-shadow: 0px 0px 5px 10px rgba(0, 0, 0, 0.8);
+	box-shadow: 0 0 10px 10px black;
 
-	background : url(../ress/graphics/inventoryBackground.png);
+	background : #141414;
 }
 
-table#inventoryList
+.float
 {
-	width : 100%;
+	position : absolute;
 
-	margin-top : 10px;
+	top : -30px;
+
+	width  : auto;
+	height : 10px;
+
+	padding : 5px;
+
+	font-size : 12.5px;
+
+	border-top-left-radius  : 10px;
+	border-top-right-radius : 10px;
+
+	border        : thin #151515 solid;
+	border-bottom : none;
 
 	background : #101010;
-	box-shadow : 0px 0px 15px 5px rgba(0, 0, 0, 0.5) inset;
 }
 
-table#inventoryList tr
+.float:hover
 {
-	width : 100%;
-
-	padding : 10px;
-}
-
-table#inventoryList tr:hover
-{
-	background : #151515;
-
 	cursor : pointer;
 }
 
-table#inventoryList td
+#blocksFloat
 {
-	width  : 50% ;
-	height : 30px;
-
-	text-align : center;
+	left : 20px;
 }
 
-.currentItem
+#weaponsFloat
 {
-	background : #152535;
-	box-shadow : 0px 0px 15px 5px rgba(0, 0, 0, 0.5) inset;
+	left : 150px;
+}
+
+section.inventoryTab
+{
+	position : absolute;
+
+	top  : 30px;
+	left : 0;
+
+	width  : 100%;
+	height : 390px;
+
+	border-top-left-radius  : 5px;
+	border-top-right-radius : 5px;
+
+	border        : thin #151515 solid;
+	border-bottom : none;
+
+	background : #101010;
+}
+
+section.inventoryTab:hover
+{
+	z-index : 2;
 }
 
 div#character
