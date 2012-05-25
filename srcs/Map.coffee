@@ -5,23 +5,18 @@ class @Map
 	hcellSize = 20 #[px]
 	qcellSize = 10 #[px]
 
-	hollow = '0'
-	dirt   = '1'
-	stone  = '2'
-	wood   = '3'
-
-	translate = (type) ->
-		switch type
-			when dirt   then 'dirt'
-			when stone  then 'stone'
-			when wood   then 'wood'
+	translate = (number) ->
+		switch number
+			when '1' then 'dirt'
+			when '2' then 'stone'
+			when '3' then 'wood'
 			else null
 
 	interpret = (id) ->
 		switch id
-			when 'dirt'   then dirt
-			when 'stone'  then stone
-			when 'wood'   then wood
+			when 'dirt'  then '1'
+			when 'stone' then '2'
+			when 'wood'  then '3'
 			else null
 
 	relativeFrom = (absolute) ->
@@ -31,32 +26,54 @@ class @Map
 		relative.multiply cellSize
 
 	## Public
-	constructor : (mesh, @index) ->
-		{@matrix, points} = mesh
-		{width, height  } = @
+	constructor : (mesh) ->
+		{@matrix, @index, points} = mesh
 
 		@points =
 			'left'  : absoluteFrom points.player.first
 			'right' : absoluteFrom points.player.last
 
-		blocks = []
-		
-		height.times (y) ->
-			blocks[y] = []
-			width.times (x) ->
-				blocks[y][x] = null
+	compose : (objectManager) ->
+		{matrix} = @
+		{width, height} = matrix
 
-		@blocks = blocks
+		filled = []
+
+		matrix.each (row, y) ->
+			filled[y] = []
+			row.each (symbol, x) ->
+				id = translate symbol
+				block = objectManager.make('block', id) or null
+				block?.coordinate = absoluteFrom([x, y].point()).add hcellSize
+
+				filled[y][x] = block
+
+		@matrix = filled
+
+	decompose : ->
+		{matrix} = @
+		{width, height} = matrix
+
+		empty = []
+
+		matrix.each (row, y) ->
+			empty[y] = []
+			row.each (block, x) ->
+				do block?.destroy
+
+				empty[y][x] = interpret block?.id
+
+		@matrix = empty
 
 	checkX : (points..., direction) ->
 		return points.every (point) =>
-			relative = point.divide(cellSize).round()
+			relative = relativeFrom point.add hcellSize
 
 			{x, y} = relative
 			
 			x += direction
 
-			return @matrix[y]?[x] is hollow
+			return @matrix[y]?[x] is null
 
 	checkY : (points..., direction) ->
 		return points.every (point) =>
@@ -66,7 +83,7 @@ class @Map
 			
 			y += direction
 
-			return @matrix[y]?[x] is hollow
+			return @matrix[y]?[x] is null
 
 	checkBorder : (point, side) ->
 		relative = relativeFrom point
@@ -76,61 +93,50 @@ class @Map
 		return side is 'left' and x is 0 or side is 'right' and x is @width-1
 
 	checkWidth  : (x) ->
-		x = x/cellSize
+		x /= cellSize
 
 		return x < @width
 
 	checkHeight : (y) ->
-		y = y/cellSize
+		y /= cellSize
 
 		return y < @height
 
-	destroy : ->
-		@blocks.each (row) ->
-			row.each (block) ->
-				do block?.remove
+	delete : (point) ->
+		return null unless block = @at point
 
-	destroyBlockAt : (point) ->
 		relative = relativeFrom point
 
 		{x, y} = relative
 
-		@matrix[y][x] = hollow
+		copy = block.clone()
 
-		do @blocks[y][x]?.remove
+		block.destroy()
 
-	blockAt : (point) ->
+		@matrix[y][x] = null
+
+		return copy
+
+	at : (point) ->
 		relative = relativeFrom point
 
 		{x, y} = relative
 
-		type = @matrix[y]?[x]
+		return @matrix[y][x]
 
-		id = translate type
+	insert : (block, point) ->
+		return unless block
 
-		return id
-
-	putBlock  : (point, id, shape) ->
-		return unless id or shape
-
-		type     = interpret id
 		relative = relativeFrom point
 
-		shape.position = absoluteFrom(relative).add hcellSize
+		block.coordinate    = absoluteFrom(relative).add hcellSize
+		block.shape.visible = yes
 
 		{x, y} = relative
 
-		@blocks[y][x] = shape
-		@matrix[y][x] = type
+		@matrix[y][x] = block
 
-	spawnBlock : (point, shape) ->
-		relative = relativeFrom point
-
-		shape.position = absoluteFrom(relative).add hcellSize
-
-		{x, y} = relative
-
-		@blocks[y][x] = shape
+		console.log block
 
 	@get 'height', ->
 		@height_ ?= @matrix.height
@@ -142,3 +148,4 @@ class @Map
 
 	@get 'absoluteFrom', -> absoluteFrom
 	@get 'relativeFrom', -> relativeFrom
+

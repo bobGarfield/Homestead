@@ -23,9 +23,10 @@ class @App
 				switchMenu    : '.switchMenu'
 
 			lists :
-				blockList : '#blockList'
-				itemList  : '#itemList'
-				saveList  : '#saveList'
+				blockList     : '#blockList'
+				equipmentList : '#equipmentList'
+				weaponList    : '#weaponList'
+				saveList      : '#saveList'
 
 		storage = new Storage
 			texturesPath : 'ress/textures/'
@@ -36,6 +37,7 @@ class @App
 
 		storage.loadMeshes   meshRegistrator.pack
 		storage.loadTextures textureRegistrator.pack
+		storage.loadObjects  objectRegistrator.pack
 
 		ui.init @
 

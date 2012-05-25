@@ -10,11 +10,11 @@ class @AnimationManager
 	init : (paper) ->
 		p = paper
 
-	makeAnimation : (shape, id, sprites) ->
-		@[id] = new p.SpriteAnimation shape, sprites
+	makeAnimation : (id, sprites) ->
+		@[id] = new p.SpriteAnimation sprites
 
-	request : (id) ->
-		do @[id]?.request
+	animate : (object) ->
+		@[object.id].animate object.shape
 
-	cancel  : (id) ->
-		do @[id]?.cancel
+	hold : (object) ->
+		@[object.id].hold object.shape

@@ -1,10 +1,10 @@
 {MapManager, SaveManager, EventManager, ShapeManager, AnimationManager} = @
 
-## Directions
-left  =  -5 #[px]
-right =   5 #[px]
-up    = -50 #[px]
-down  =   5 #[px]
+## Vectors
+left  =  [-5,   0].point()
+right =  [ 5,   0].point()
+up    =  [ 0, -50].point()
+down  =  [ 0,   5].point()
 
 ## Keyboard keys
 walkLeftKey    = 'a'
@@ -33,6 +33,7 @@ class @GeneralController
 		@player = new Player
 
 		@animationManager = new AnimationManager
+		@objectManager    = new ObjectManager
 		@shapeManager     = new ShapeManager
 		@eventManager     = new EventManager
 		@saveManager      = new SaveManager
@@ -47,25 +48,25 @@ class @GeneralController
 		@eventManager    .init paper
 		@shapeManager    .init paper, @storage
 
-		@mapManager .init @storage
+		@objectManager .init @storage, @shapeManager, @animationManager
+		@mapManager    .init @storage
 
 		@ui.linkAggregates
 			'inventory' : @player.inventory
-
-		@mapManager.buildMap @shapeManager
 
 		do @initPlayer
 		do @initGameloop
 		do @initAnimation
 		do @initActions
 
+		@mapManager.composeMap @objectManager
+
 		@save('New Game') unless @load('New Game')
 
 	stop : ->
 		{camera} = paper.view
 
-		do @mapManager.destroyMap
-		do @player.reset
+		do @mapManager.decomposeMap
 
 		do camera.reset
 
@@ -77,16 +78,20 @@ class @GeneralController
 
 		map   = @mapManager.current
 		point = map.points.left
-		shape = @shapeManager.makeCreature 'player'
 
-		@player.shape = shape
+		shirt  = @objectManager.make 'equipment', 'shirt'
+		helmet = @objectManager.make 'equipment', 'helmet'
+		drill  = @objectManager.make 'weapon',    'drill'
 
-		@player.spawn point
-
-		camera.observe @player.body
+		@player.init
+			weapon    : drill
+			equipment :
+				head : helmet
+				body : shirt
+			point
 
 	initGameloop : ->
-		{mapManager, shapeManager} = @
+		{mapManager, objectManager} = @
 
 		{player       } = @
 		{camera       } = paper.view
@@ -103,7 +108,7 @@ class @GeneralController
 				player.move right
 
 				if map.checkBorder(player.body, 'right') and mapManager.checkCurrent('last')
-					mapManager.rebuildMap shapeManager, 1
+					mapManager.recomposeMap objectManager, 1
 
 					player.spawn map.points.left
 
@@ -113,102 +118,92 @@ class @GeneralController
 				player.move left
 
 				if map.checkBorder(player.body, 'left') and mapManager.checkCurrent('first')
-					mapManager.rebuildMap shapeManager, -1
+					mapManager.recomposeMap objectManager, -1
 
 					player.spawn map.points.right
 
 				camera.observe player.body
 
 			if map.checkY(player.body, 1)
-				player.fall down
+				player.move down
 
 				camera.observe player.body
 
 				return
 
 			if key.isDown(jumpKey) and map.checkY(player.head, -1)
-				player.jump up
+				player.move up
 
 				camera.observe player.body
 
 	initAnimation : ->
-		{animationManager, storage} = @
-		{shape   } = @player
-		{textures} = storage
-
+		{animationManager, player} = @
 		key = paper.Key
-
-		runSprites     = storage.consecutiveTextures 'playerRun'
-		runLeftSprites = storage.consecutiveTextures 'playerRunLeft'
-		
-		animationManager.makeAnimation shape, 'run',     runSprites
-		animationManager.makeAnimation shape, 'runLeft', runLeftSprites
 
 		@eventManager.setAnimationOnHandler (event) ->
 			if key.isDown walkKey
-				animationManager.request 'run'
+				do player.straighten
+				for object in player.inventory.objects
+					animationManager.animate object if object.animatable
 
 			else if key.isDown walkLeftKey
-				animationManager.request 'runLeft'
+				do player.reverse
+				for object in player.inventory.objects
+					animationManager.animate object if object.animatable
 
 		@eventManager.setAnimationOffHandler (event) ->
-			if event.key is walkKey
-				animationManager.cancel 'run'
-
-				shape.image = textures.player
-
-			else if event.key is walkLeftKey
-				animationManager.cancel 'runLeft'
-
-				shape.image = textures.playerLeft
+			if event.key is walkKey or event.key is walkLeftKey
+				for object in player.inventory.objects
+					animationManager.hold object if object.animatable
 
 	initActions : ->
-		{ui, mapManager, shapeManager} = @
+		{ui, mapManager, shapeManager, objectManager} = @
 
-		{player   } = @
+		{player} = @
+		{camera} = paper.view
+
 		{inventory} = player
-		{camera   } = paper.view
 
 		@eventManager.setAttackHandler (event) ->
 			map = mapManager.current ; point = event.point.add camera.box
 
-			shapeManager.makeRay 'white', player.tool, point
+			shapeManager.drawRay 'white', player.hand, point
 
 			point.x -= map.cellSize/4
 
-			id = map.blockAt point
+			block = map.delete point
 
-			inventory.put id
-
-			map.destroyBlockAt point
+			player.pick block
 
 		@eventManager.setAlternativeHandler (event) ->
 			map = mapManager.current ; point = event.point.add camera.box
 
 			point.x -= map.cellSize/4
 
-			return if map.blockAt point
+			return if map.at point
 
-			id = inventory.takeBlock()
+			block = inventory.currentBlock
 
-			return ui.showMessage('Ran out of blocks') unless id
+			return ui.showMessage('Ran out of blocks') unless block
 
-			shape = shapeManager.makeBlock id
-
-			map.putBlock point, id, shape
+			map.insert block, point
 
 	save : (key) ->
 		{player} = @
 
 		map = @mapManager.current
 
+		do @mapManager.decomposeMap
+
 		pdata =
-			'coordinate' : player.coordinate
+			'coordinate' : player.body
 			'container'  : player.inventory.container
 
 		mdata =
 			'matrices' : @mapManager.extract()
 			'index'    : map.index
+
+		@mapManager.composeMap @objectManager
 
 		@saveManager.save new State
 			'player'     : pdata
@@ -228,6 +223,8 @@ class @GeneralController
 		pdata = state.data.player
 		mdata = state.data.mapManager
 
+		do @mapManager.decomposeMap
+
 		mapManager.involve mdata.matrices
 		mapManager.select  mdata.index
 
@@ -236,7 +233,7 @@ class @GeneralController
 		player.spawn coordinate
 		player.inventory.container.set pdata.container
 
-		mapManager.buildMap @shapeManager
+		mapManager.composeMap @objectManager
 
 		camera.observe player.body
 

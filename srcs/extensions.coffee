@@ -38,23 +38,25 @@ global.cancel  = do ->
 
 class PaperScope::SpriteAnimation
 	
-	constructor : (@shape, @frames) ->
+	constructor : (@frames) ->
 		@limit = @frames.length
 		@index = 0
-		@id    = 0
+		@id    = null
 
-		@animate = =>
+	animate : (shape) ->
+		@stagnant ?= shape.image
+
+		@id = request =>
 			@index = 0 if @index is @limit
 
-			shape.image = frames[@index]
+			shape.image = @frames[@index]
 
 			@index++
 
-	request : ->
-		@id = request @animate
-
-	cancel  : ->
+	hold : (shape) ->
 		cancel @id
+
+		shape.image = @stagnant
 
 PaperScope::initCamera  = ->
 	@view.camera = new @Camera @view._context

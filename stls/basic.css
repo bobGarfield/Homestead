@@ -37,7 +37,7 @@ footer
 	height : 50px;
 
 	background      : url(../ress/graphics/decor.png) repeat-x;
-	background-size : 10%
+	background-size : 10%;
 }
 
 #logo
@@ -66,8 +66,9 @@ footer
 	width  : 100%;
 	height : auto;
 
-	background : #185f2f;
-	box-shadow : 0 0 100px 75px black inset;
+	background      : #1d8040;
+
+	box-shadow : 0 0 100px 100px black inset;
 }
 
 .box
@@ -170,6 +171,8 @@ footer
 	background : -webkit-gradient(linear, left top, left bottom, from(#e2e2e2), to(#eee));
 	background : -moz-linear-gradient(top,  #e2e2e2,  #eee);
 
+	color : black;
+
 	cursor : pointer;
 }
 
@@ -186,7 +189,7 @@ footer
 	z-index  : 1;
 
 	left : 50%;
-	top  : 80px;
+	top  : 90px;
 
 	width  : 200px;
 	height : auto;

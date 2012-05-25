@@ -21,7 +21,7 @@ Function::get = (prop, callback) ->
 	atom.accessors.define @::, prop, 'get' : callback
 
 # Define both setter and getter
-Function::two = (prop, opts) ->
+Function::access = (prop, opts) ->
 	atom.accessors.define @::, prop,
 		'set' : opts.set
 		'get' : opts.get
@@ -43,24 +43,34 @@ Number::floor = ->
 Number::round = ->
 	Math.round @
 
+## String
+String::up = ->
+	return @toUpperCase()
+
+String::upFirst = ->
+	return @[0].toUpperCase() + @[1...]
+
+String::low = ->
+	return @toLowerCase()
+
 ## Array
 
 # Short forEach
 Array::each = Array::forEach
 
-Array.two 'first',
+Array.access 'first',
 	get : (      -> return @[0]),
 	set : ((val) -> @[0] = val )
 
-Array.two 'last',
+Array.access 'last',
 	get : (      -> return @[@length-1]),
 	set : ((val) -> @[@length-1] = val )
 
-Array.two 'second',
+Array.access 'second',
 	get : (      -> return @[1]),
 	set : ((val) -> @[1] = val )
 
-Array.two 'penult',
+Array.access 'penult',
 	get : (      -> return @[@length-2]),
 	set : ((val) -> @[@length-2] = val )
 

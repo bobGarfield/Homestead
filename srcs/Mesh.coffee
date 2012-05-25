@@ -38,3 +38,6 @@ class @Mesh
 					row[x] = '0'
 
 		@matrix = matrix
+
+
+

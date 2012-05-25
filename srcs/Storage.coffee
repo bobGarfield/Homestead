@@ -19,8 +19,7 @@ class @Storage
 		@textures = {}
 		@audios   = {}
 		@meshes   = {}
-
-		@currentLocation = null
+		@objects  = {}
 
 	loadTextures : (pack) ->
 		{textures} = @
@@ -38,11 +37,17 @@ class @Storage
 		{meshes} = @
 
 		pack.each (matrix, index) ->
-			mesh       = new Mesh matrix
+			mesh = new Mesh matrix
 
 			mesh.index = index
 		
 			meshes[index] = mesh
+
+	loadObjects : (pack) ->
+		{objects} = @
+
+		pack.each (data) ->
+			objects[data.id] = data
 
 	consecutiveTextures : (id) ->
 		{textures} = @

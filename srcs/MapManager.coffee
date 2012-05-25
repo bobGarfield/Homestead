@@ -16,51 +16,36 @@ class @MapManager
 	load : (meshes) ->
 		{maps} = @
 
-		index  = 0
+		for key of meshes then do ->
+			maps.push new Map meshes[key]
 
-		for mesh of meshes then do ->
-			maps[index] = new Map meshes[mesh], index
+	decomposeMap : ->
+		do @current.decompose
 
-			index++
+	composeMap : (objectManager) ->
+		@current.compose objectManager
 
-	buildMap : (shapeManager) ->
-		map = @current
+	recomposeMap : (objectManager, side = 0) ->
+		do @decomposeMap
 
-		{width, height} = map
+		@updateCurrent side if side
 
-		height.times (y) ->
-			width.times (x) ->
-				relative = [x, y].point()
-				point    = map.absoluteFrom relative
+		@composeMap objectManager
 
-				if id = map.blockAt point
-					shape = shapeManager.makeBlock id
-
-					map.spawnBlock point, shape
-
-	destroyMap : ->
-		do @current.destroy
-
-	rebuildMap : (shapeManager, side = 0) ->
-		@updateMap side if side
-
-		@buildMap shapeManager
-
-	updateMap : (side) ->
+	updateCurrent : (side) ->
 		{index} = @current
 
 		@select index+side
 
 	select : (index) ->
-		do @destroyMap
-
 		@current = @maps[index]
 
 	checkCurrent : (place) ->
 		return @current isnt @maps[place]
 
 	extract : ->
-		return @maps.map (map) -> return map.matrix
+		return @maps.map (map) ->
+			return map.matrix
 
 	involve : (matrices) ->
 		@maps.each (map, index) -> map.matrix = matrices[index]

@@ -39,10 +39,10 @@ class @Interface
 					do sections[key].switch
 
 		buttons.switchJournal.bind 'click', =>
-			do @drawJournal
+			do @buildJournal
 
 		buttons.switchLoader.bind 'click', =>
-			do @drawLoader
+			do @buildLoader
 
 		buttons.launchGame.bind 'click', ->
 			for section, dom of sections then do dom.close
@@ -60,41 +60,59 @@ class @Interface
 			do a.stopGame
 
 	showMessage : (text) ->
-		message = make 'div'
+		$.create('div')
 
-		message.className   = 'message'
-		message.textContent = text
+		.attr
+			class : 'message'
 
-		message.onclick = -> b.removeChild @
+		.bind 'click', ->
+			@parentNode.removeChild @
 
-		b.appendChild message
+		.text(text)
 
-	drawJournal : ->
+		.appendTo @b
+
+	createItem : (type, id) ->
 		{inventory} = @aggregates
 		{container} = inventory
-		{blockList, weaponList} = @parts.lists
+
+		item = $.createRow(id, (container["#{type}s"][id]?.length or 'used'))
+
+		.attr
+			'id' : id
+
+		.addClass('item')
+
+		.bind 'click', ->
+			$(@parentNode.children).removeClass 'current'
+			inventory.select type, @id
+			$(@).addClass 'current'
+
+		item.addClass 'current' if inventory.used type, id
+
+		console.log @parts.lists
+
+		item.appendTo @parts.lists["#{type}List"]
+
+	buildJournal : ->
+		{inventory} = @aggregates
+		{container} = inventory
 
 		do $('.item').destroy
 
-		for type, quantity of container.blocks
-			item = $.createRow(type, quantity)
+		for id of container.blocks
+			@createItem 'block', id
 
-			.attr
-				id : type
+		for id of container.equipments
+			@createItem 'equipment', id
 
-			.addClass('item')
+		for id of container.weapons
+			@createItem 'weapon', id
 
-			.bind 'click', ->
-				$(@parentNode.children).removeClass 'current'
-				inventory.currentBlock = @id
-				$(@).addClass 'current'
-
-			item.addClass 'current' if type is inventory.currentBlock
-
-			item.appendTo blockList
+		@createItem object.type, object.id for object in inventory.objects
 
 	# Draw App's loader
-	drawLoader : ->
+	buildLoader : ->
 		{saveList} = @parts.lists
 
 		do $('.item').destroy

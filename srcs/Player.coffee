@@ -6,45 +6,69 @@ class @Player
 	shapeWidth  = 40
 
 	## Public
-	constructor : (@inventory) ->		
-		@shape = null
-		@coord = null
-
+	constructor : ->
 		@inventory = new Inventory
 
+		@direction = 1
+
+	init : (set, point) ->
+		{inventory} = @
+
+		inventory.init set
+
+		@spawn point
+
 	spawn : (point) ->
-		@coordinate      = point.clone()
-		@shape?.position = point.clone()
+		@coordinate = point.clone()
 
-	move : (distance) ->
-		@shape.position.x += distance
-		@coordinate.x     += distance
+	reverse : ->
+		return unless ~@direction
+		shape.scale -1, 1 for shape in @inventory.shapes
+		@direction = -1
 
-	jump : (height) ->
-		@shape.position.y += height
-		@coordinate.y     += height
+		@coordinate = @body
 
-	fall : (height) ->
-		@shape.position.y += height
-		@coordinate.y     += height
+	straighten : ->
+		return if ~@direction
+		shape.scale -1, 1 for shape in @inventory.shapes
+		@direction = 1
 
-	reset : ->
-		do @shape.remove
+		@coordinate = @body
 
-	@get 'head', ->
-		head    = @coordinate.clone()
-		head.y -= shapeHeight/2
+	move : (vector) ->
+		@coordinate = @body.add vector
 
-		return head
+	pick : (objects...) ->
+		{inventory} = @
+
+		inventory.put object for object in objects
+
+	@set 'coordinate', (point) ->
+		{weapon, equipment} = @inventory
+
+		@coordinate_ = point.clone()
+
+		weapon.coordinate         = @hand
+		equipment.head.coordinate = @head
+		equipment.body.coordinate = @body
 
 	@get 'body', ->
-		return @coordinate
+		return @coordinate_.clone()
 
-	@get 'tool', ->
-		tool = @coordinate.clone()
+	@get 'hand', ->
+		point = @coordinate_.clone()
 
-		tool.y -= shapeHeight/4
-		tool.x += shapeWidth/2
+		point.x += 33*@direction
+		point.y -= 11
 
-		return tool
+		return point
+
+	@get 'head', ->
+		point = @coordinate_.clone()
+
+		point.y -= 27
+
+		return point
+
+
 

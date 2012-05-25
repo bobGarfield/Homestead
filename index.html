@@ -32,6 +32,7 @@
 	<script src = "comp/extensions.js"></script>
 
 	<script src = "comp/dynamics.js"></script>
+	<script src = "comp/statics.js"></script>
 
 	<script src = "comp/Interface.js"></script>
 	<script src = "comp/Mesh.js"></script>
@@ -44,6 +45,7 @@
 	<script src = "comp/App.js"></script>
 
 	<script src = "comp/AnimationManager.js"></script>
+	<script src = "comp/ObjectManager.js"></script>
 	<script src = "comp/ShapeManager.js"></script>
 	<script src = "comp/EventManager.js"></script>
 	<script src = "comp/SaveManager.js"></script>
@@ -53,6 +55,7 @@
 
 	<script src = "data/meshlist.js"></script>
 	<script src = "data/texturelist.js"></script>
+	<script src = "data/objectlist.js"></script>
 
 	<script src = "ress/maps/entire.js"></script>
 	<script src = "ress/maps/forest.js"></script>
@@ -64,8 +67,6 @@
 
 	<!-- Menu -->
 	<section id = "menu" class = "section">
-		<div class = "header">
-		</div>
 		<div id = "menuBackground">
 			<div class = "box">
 				<menu id = "menuList">
@@ -79,8 +80,6 @@
 
 	<!-- Ingame -->
 	<section id = "ingame" class = "section invisible">
-		<div class = "header">
-		</div>
 		<div id = "ingameBackground">
 			<div class = "box">
 				<menu id = "ingameList">
@@ -147,6 +146,12 @@
 					<h2 id = "weaponsFloat" class = "float">Weapons</h2>
 
 					<table id = "weaponList" class = "itemList"></table>
+				</section>
+
+				<section id = "equipments" class = "inventoryTab">
+					<h2 id = "equipmentsFloat" class = "float">Equipments</h2>
+
+					<table id = "equipmentList" class = "itemList"></table>
 				</section>
 			</div>
 

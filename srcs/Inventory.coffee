@@ -1,28 +1,69 @@
-block = /(dirt|stone|wood)/
-
 class @Inventory
 
 	constructor : ->
 		@container = new Container
 
-		@currentBlock = null
-		@currentItem  = null
+		@block  = null
+		@weapon = null
 
-	put : (id) ->
-		return unless id
+		@equipment =
+			head : null
+			body : null
 
-		if block.test id
-			@container.putBlock id
-		else
-			@container.putItem  id
+	init : (set) ->
+		{weapon    } = set
+		{body, head} = set.equipment
 
-	takeBlock : ->
-		{blocks      } = @container
-		{currentBlock} = @
+		@put part for part in [body, head, weapon]
 
-		return blocks[currentBlock] and blocks[currentBlock]-- and currentBlock or null
+		@selectWeapon    weapon.id
+		@selectEquipment head.id
+		@selectEquipment body.id
 
-	takeWeapon : (id) ->
-		{items} = @container
+	put : (object) ->
+		return unless object
+		@container.put object
 
-		@currentItem = items[id] or null
+	selectBlock : (id) ->
+		return if id is @block?.id
+
+		@block = id
+
+	selectWeapon : (id) ->
+		return if id is @weapon?.id
+
+		do @weapon?.hide
+
+		@weapon = @container.take 'weapon', id
+
+		do @weapon.show
+
+	selectEquipment : (id) ->
+		{place} = @container.equipments[id].first
+		current = @equipment[place]
+
+		return if id is current?.id
+
+		current?.hide()
+
+		@container.put current
+		@equipment[place] = @container.take 'equipment', id
+
+		@equipment[place].show()
+
+	select : (type, id) ->
+		@["select#{type.upFirst()}"] id
+
+	used : (type, id) ->
+		{equipment, weapon, block} = @
+
+		return [equipment.head, equipment.body, weapon, block].some (object) -> object?.id is id or object is id
+
+	@get 'currentBlock', ->
+		return @container.take 'block', @block
+
+	@get 'shapes', ->
+		[@equipment.body.shape, @equipment.head.shape, @weapon.shape]
+
+	@get 'objects', ->
+		[@equipment.body, @equipment.head, @weapon]

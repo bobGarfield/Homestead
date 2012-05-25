@@ -63,7 +63,12 @@ div#inventory
 
 #weaponsFloat
 {
-	left : 150px;
+	left : 120px;
+}
+
+#equipmentsFloat
+{
+	left : 240px;
 }
 
 section.inventoryTab

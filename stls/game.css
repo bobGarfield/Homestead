@@ -19,4 +19,6 @@ canvas#window
 	border-radius : 20px;
 
 	background : #050505;
+
+	cursor : crosshair;
 }
