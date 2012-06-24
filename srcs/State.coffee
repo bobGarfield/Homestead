@@ -2,7 +2,7 @@ class @State
 	constructor : (@data, key) ->
 		@key = key or (new Date).toString()
 
-	stringify : ->
+	stringify : ->	
 		@data = JSON.stringify @data
 
 		return @

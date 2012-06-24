@@ -26,6 +26,15 @@ class StaticObject
 		copy.hide()
 
 		return copy
+		
+	pack : ->
+		data = {}
+		
+		for property, value of @ then do ->
+			if typeof value isnt 'function'
+				data[property] = value unless property is 'shape' or property is 'coordinate'
+		
+		return data
 
 	@access 'coordinate',
 		get : ->

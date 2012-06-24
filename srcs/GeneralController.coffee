@@ -184,7 +184,7 @@ class @GeneralController
 
 			block = inventory.currentBlock
 
-			return ui.showMessage('Ran out of blocks') unless block
+			return ui.showMessage 'Ran out of blocks' unless block
 
 			map.insert block, point
 
@@ -197,7 +197,8 @@ class @GeneralController
 
 		pdata =
 			'coordinate' : player.body
-			'container'  : player.inventory.container
+			'inventory'  : player.inventory.extract()
+			'direction'  : player.direction
 
 		mdata =
 			'matrices' : @mapManager.extract()
@@ -211,7 +212,7 @@ class @GeneralController
 			key or null
 
 	load : (key) ->
-		{player, mapManager} = @
+		{player, mapManager, objectManager} = @
 		{camera} = paper.view
 
 		state = @saveManager.load(key)
@@ -229,11 +230,15 @@ class @GeneralController
 		mapManager.select  mdata.index
 
 		coordinate = new paper.Point pdata.coordinate
-
-		player.spawn coordinate
-		player.inventory.container.set pdata.container
+		
+		unless player.direction is pdata.direction
+			player.straighten()
+		
+		player.inventory.involve pdata.inventory, objectManager
 
 		mapManager.composeMap @objectManager
+		
+		player.spawn coordinate
 
 		camera.observe player.body
 

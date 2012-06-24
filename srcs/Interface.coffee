@@ -90,8 +90,6 @@ class @Interface
 
 		item.addClass 'current' if inventory.used type, id
 
-		console.log @parts.lists
-
 		item.appendTo @parts.lists["#{type}List"]
 
 	buildJournal : ->

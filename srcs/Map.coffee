@@ -122,7 +122,7 @@ class @Map
 
 		{x, y} = relative
 
-		return @matrix[y][x]
+		return @matrix[y]?[x]
 
 	insert : (block, point) ->
 		return unless block
